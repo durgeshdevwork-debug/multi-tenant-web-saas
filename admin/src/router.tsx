@@ -1,20 +1,17 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { ProtectedLayout } from './components/layouts/ProtectedLayout';
-
-// Placeholder Pages
-const UserLogin = () => <div className="p-8">User Login Page Placeholder</div>;
-const AdminLogin = () => <div className="p-8">Admin Login Page Placeholder</div>;
-const AdminDashboard = () => <div className="p-8">Admin Dashboard - Manage Clients</div>;
-const UserDashboard = () => <div className="p-8">Tenant Dashboard - Manage Content</div>;
+import { LoginPage } from './pages/LoginPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { UserDashboard } from './pages/UserDashboard';
 
 const router = createBrowserRouter([
   {
     path: '/login',
-    element: <UserLogin />
+    element: <LoginPage mode="user" />
   },
   {
     path: '/admin/login',
-    element: <AdminLogin />
+    element: <LoginPage mode="admin" />
   },
   {
     path: '/',
