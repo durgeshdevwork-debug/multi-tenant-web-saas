@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInEmail, signOut, useSession } from '@/lib/auth';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 export function LoginPage({ mode }: { mode: 'admin' | 'user' }) {
   const navigate = useNavigate();
@@ -28,6 +34,7 @@ export function LoginPage({ mode }: { mode: 'admin' | 'user' }) {
 
     try {
       const response = await signInEmail({ email, password, rememberMe: true });
+      console.log('check resp : ', response)
       if (response?.error) {
         setError(response.error.message ?? 'Login failed.');
         return;
@@ -60,46 +67,58 @@ export function LoginPage({ mode }: { mode: 'admin' | 'user' }) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">{mode === 'admin' ? 'Admin Login' : 'User Login'}</h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Sign in to continue managing your site.
-        </p>
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            {mode === 'admin' ? 'Admin Login' : 'User Login'}
+          </CardTitle>
+          <CardDescription>
+            Sign in to continue managing your site
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form id="login-form" className="space-y-4" onSubmit={onSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
 
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
-            <input
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Password</label>
-            <input
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
-          </div>
-
-          {error ? <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
-
-          <button
-            type="submit"
-            className="w-full rounded-md bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/90"
-            disabled={loading}
-          >
+            {error ? (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button form="login-form" type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

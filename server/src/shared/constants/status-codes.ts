@@ -24,7 +24,7 @@ export const STATUS_CODES = {
   NOT_IMPLEMENTED: 501,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-  GATEWAY_TIMEOUT: 504
+  GATEWAY_TIMEOUT: 504,
 } as const;
 
 export type StatusCode = (typeof STATUS_CODES)[keyof typeof STATUS_CODES];

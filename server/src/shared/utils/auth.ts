@@ -5,7 +5,7 @@ import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { admin } from 'better-auth/plugins';
 
 export const auth = betterAuth({
-  baseURL: env.ADMIN_BASE_URL ?? env.API_BASE_URL,
+  baseURL: env.BETTER_AUTH_BASE_URL ?? env.API_BASE_URL,
   secret: env.BETTER_AUTH_SECRET,
 
   // use Mongo adapter with db (and optional client)[web:154][web:157]
