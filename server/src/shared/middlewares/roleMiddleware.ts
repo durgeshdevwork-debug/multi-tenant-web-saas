@@ -2,13 +2,23 @@ import { Request, Response, NextFunction } from 'express';
 import { auth } from '../utils/auth';
 import { fromNodeHeaders } from 'better-auth/node';
 
+type SessionUser = {
+  id: string;
+  email: string;
+  name?: string;
+  image?: string | null;
+  role?: string;
+  tenantId?: string;
+};
+
 export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers)
     });
+    const user = session?.user as SessionUser | undefined;
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || user?.role !== 'admin') {
       res.status(403).json({
         success: false,
         message: 'Forbidden: Admin access required',
@@ -19,7 +29,7 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
     }
 
     // Attach user to request for convenience
-    (req as any).user = session.user;
+    (req as any).user = user;
     next();
   } catch (err) {
     next(err);
@@ -31,6 +41,7 @@ export const requireTenantUser = async (req: Request, res: Response, next: NextF
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers)
     });
+    const user = session?.user as SessionUser | undefined;
 
     if (!session) {
       res.status(401).json({
@@ -38,12 +49,12 @@ export const requireTenantUser = async (req: Request, res: Response, next: NextF
         message: 'Unauthorized',
         statusCode: 401,
         errors: []
-      });
-      return;
+    });
+    return;
     }
 
     // Only allow users that have a tenantId or admins
-    if (session.user.role !== 'admin' && !session.user.tenantId) {
+    if (user?.role !== 'admin' && !user?.tenantId) {
       res.status(403).json({
         success: false,
         message: 'Forbidden: Tenant access required',
@@ -53,7 +64,7 @@ export const requireTenantUser = async (req: Request, res: Response, next: NextF
       return;
     }
 
-    (req as any).user = session.user;
+    (req as any).user = user;
     next();
   } catch (err) {
     next(err);

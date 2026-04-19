@@ -6,6 +6,9 @@ import { ContactContent } from '../content/models/ContactContent';
 import { generateApiKey } from '../../shared/utils/apiKey';
 import { auth } from '../../shared/utils/auth';
 import { fromNodeHeaders } from 'better-auth/node';
+import { env } from '@configs/env';
+import { renderWelcomeEmail } from '@shared/email/renderEmail';
+import { sendEmail } from '@shared/email/mailer';
 
 export class AdminService {
   static async listTemplates() {
@@ -40,6 +43,7 @@ export class AdminService {
         email,
         password,
         name: clientName,
+        role: 'user',
         tenantId: String(tenant._id)
       } as any, // bypassing TS strict check for custom additional fields
       headers: fromNodeHeaders(headers)
@@ -47,6 +51,37 @@ export class AdminService {
 
     if (!userRes?.user) {
       throw new Error('Failed to create user natively via better auth');
+    }
+
+    const loginUrl = `${env.ADMIN_BASE_URL.replace(/\/$/, '')}/login`;
+    const resetRedirectTo = `${env.ADMIN_BASE_URL.replace(/\/$/, '')}/reset-password`;
+
+    const welcomeHtml = await renderWelcomeEmail({
+      name: clientName,
+      businessName: clientName,
+      appName: 'Admin Panel',
+      email,
+      password,
+      loginUrl,
+      resetUrl: resetRedirectTo
+    });
+
+    await sendEmail({
+      to: email,
+      subject: `Welcome to ${clientName}`,
+      html: welcomeHtml
+    });
+
+    try {
+      await auth.api.requestPasswordReset({
+        body: {
+          email,
+          redirectTo: resetRedirectTo
+        },
+        headers: fromNodeHeaders(headers)
+      });
+    } catch (error) {
+      console.error('Failed to send password reset email after user creation', error);
     }
 
     const modules = template.modules || [];

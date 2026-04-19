@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import {
   getLanding, updateLanding,
   getAbout, updateAbout,
@@ -18,36 +19,41 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { MediaAssetPicker } from '@/components/media-asset-picker';
 import { Loader2, Plus, Trash2, Edit2, LayoutTemplate, Info, Briefcase, FileText, Mail, Save } from 'lucide-react';
 
 const tabs = ['landing', 'about', 'services', 'blog', 'contact'] as const;
 type Tab = (typeof tabs)[number];
 
 export function UserDashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>('landing');
+  const location = useLocation();
+  const activeTab = useMemo<Tab>(() => {
+    const pathname = location.pathname.replace(/^\//, '');
+    return (tabs.find((tab) => tab === pathname) ?? 'landing') as Tab;
+  }, [location.pathname]);
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl animate-in fade-in zoom-in-95 duration-500">
+    <div className="container mx-auto max-w-6xl animate-in fade-in zoom-in-95 duration-500 p-4 md:p-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-2">Website Content</h1>
+        <h1 className="mb-2 text-4xl font-extrabold tracking-tight lg:text-5xl">Website Content</h1>
         <p className="text-lg text-muted-foreground">Manage the content, sections, and pages of your public site.</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Tab)} className="space-y-6">
-        <TabsList className="bg-muted p-1 rounded-lg flex flex-wrap h-auto">
-          <TabsTrigger value="landing" className="rounded-md flex items-center gap-2 px-6 py-2">
+      <Tabs value={activeTab} className="space-y-6">
+        <TabsList className="hidden">
+          <TabsTrigger value="landing" className="flex items-center gap-2 rounded-md px-6 py-2">
             <LayoutTemplate className="h-4 w-4" /> Landing
           </TabsTrigger>
-          <TabsTrigger value="about" className="rounded-md flex items-center gap-2 px-6 py-2">
+          <TabsTrigger value="about" className="flex items-center gap-2 rounded-md px-6 py-2">
             <Info className="h-4 w-4" /> About
           </TabsTrigger>
-          <TabsTrigger value="services" className="rounded-md flex items-center gap-2 px-6 py-2">
+          <TabsTrigger value="services" className="flex items-center gap-2 rounded-md px-6 py-2">
             <Briefcase className="h-4 w-4" /> Services
           </TabsTrigger>
-          <TabsTrigger value="blog" className="rounded-md flex items-center gap-2 px-6 py-2">
+          <TabsTrigger value="blog" className="flex items-center gap-2 rounded-md px-6 py-2">
             <FileText className="h-4 w-4" /> Blog
           </TabsTrigger>
-          <TabsTrigger value="contact" className="rounded-md flex items-center gap-2 px-6 py-2">
+          <TabsTrigger value="contact" className="flex items-center gap-2 rounded-md px-6 py-2">
             <Mail className="h-4 w-4" /> Contact
           </TabsTrigger>
         </TabsList>
@@ -98,9 +104,9 @@ function LandingSection() {
   });
 
   return (
-    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/10">
+    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-2xl">
           <LayoutTemplate className="h-6 w-6 text-primary" /> Landing Page Settings
         </CardTitle>
         <CardDescription>Configure the main hero banner, text, and bullet point highlights.</CardDescription>
@@ -108,14 +114,14 @@ function LandingSection() {
       <CardContent>
         <form
           id="landing-form"
-          className="space-y-8 max-w-4xl"
+          className="max-w-4xl space-y-8"
           onSubmit={(event) => {
             event.preventDefault();
             updateMutation.mutate(form);
           }}
         >
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Hero Section</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold">Hero Section</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="heroTitle">Hero Title</Label>
@@ -136,15 +142,13 @@ function LandingSection() {
                   rows={3}
                 />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="heroImageUrl">Hero Image URL</Label>
-                <Input
-                  id="heroImageUrl"
-                  placeholder="https://example.com/image.png"
-                  value={form.heroImageUrl ?? ''}
-                  onChange={(event) => setForm((prev) => ({ ...prev, heroImageUrl: event.target.value }))}
-                />
-              </div>
+              <MediaAssetPicker
+                className="md:col-span-2"
+                label="Hero image"
+                value={form.heroImageUrl ?? ''}
+                onChange={(url) => setForm((prev) => ({ ...prev, heroImageUrl: url }))}
+                helperText="Pick an existing image from the media library or upload a new one."
+              />
               <div className="space-y-2">
                 <Label htmlFor="primaryCtaText">Call to Action (CTA) Text</Label>
                 <Input
@@ -167,11 +171,11 @@ function LandingSection() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Highlights</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold">Highlights</h3>
             <div className="space-y-4">
               {form.highlights.map((highlight, index) => (
-                <div key={`${highlight.title}-${index}`} className="flex flex-col md:flex-row gap-4 items-start p-4 bg-muted/30 rounded-lg border">
-                  <div className="flex-1 space-y-2 w-full">
+                <div key={`${highlight.title}-${index}`} className="flex flex-col items-start gap-4 rounded-lg border bg-muted/30 p-4 md:flex-row">
+                  <div className="w-full flex-1 space-y-2">
                     <Label>Title</Label>
                     <Input
                       placeholder="Highlight title..."
@@ -185,7 +189,7 @@ function LandingSection() {
                       }
                     />
                   </div>
-                  <div className="flex-[2] space-y-2 w-full">
+                  <div className="w-full flex-[2] space-y-2">
                     <Label>Description</Label>
                     <Input
                       placeholder="Short description..."
@@ -227,19 +231,19 @@ function LandingSection() {
                   }))
                 }
               >
-                <Plus className="h-4 w-4 mr-2" /> Add Highlight
+                <Plus className="mr-2 h-4 w-4" /> Add Highlight
               </Button>
             </div>
           </div>
         </form>
       </CardContent>
-      <CardFooter className="bg-muted/50 py-4 border-t flex justify-end">
+      <CardFooter className="flex justify-end border-t bg-muted/50 py-4">
         <Button
           form="landing-form"
           type="submit"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save Landing Page
         </Button>
       </CardFooter>
@@ -279,9 +283,9 @@ function AboutSection() {
   });
 
   return (
-    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/10">
+    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-2xl">
           <Info className="h-6 w-6 text-primary" /> About Us Content
         </CardTitle>
         <CardDescription>Update the about heading, description, and your team members.</CardDescription>
@@ -289,14 +293,14 @@ function AboutSection() {
       <CardContent>
         <form
           id="about-form"
-          className="space-y-8 max-w-4xl"
+          className="max-w-4xl space-y-8"
           onSubmit={(event) => {
             event.preventDefault();
             updateMutation.mutate(form);
           }}
         >
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Company Info</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold">Company Info</h3>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="heading">About Heading</Label>
@@ -329,11 +333,11 @@ function AboutSection() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Team Members</h3>
+            <h3 className="border-b pb-2 text-lg font-semibold">Team Members</h3>
             <div className="space-y-4">
               {form.teamMembers?.map((member, index) => (
-                <div key={`${member.name}-${index}`} className="flex flex-col md:flex-row gap-4 items-start p-4 bg-muted/30 rounded-lg border">
-                  <div className="flex-1 space-y-2 w-full">
+                <div key={`${member.name}-${index}`} className="flex flex-col items-start gap-4 rounded-lg border bg-muted/30 p-4 md:flex-row">
+                  <div className="w-full flex-1 space-y-2">
                     <Label>Name</Label>
                     <Input
                       placeholder="Jane Doe"
@@ -347,7 +351,7 @@ function AboutSection() {
                       }
                     />
                   </div>
-                  <div className="flex-1 space-y-2 w-full">
+                  <div className="w-full flex-1 space-y-2">
                     <Label>Role</Label>
                     <Input
                       placeholder="CTO"
@@ -361,18 +365,18 @@ function AboutSection() {
                       }
                     />
                   </div>
-                  <div className="flex-1 space-y-2 w-full">
-                    <Label>Image URL</Label>
-                    <Input
-                      placeholder="https://example.com/avatar.png"
+                  <div className="w-full flex-[1.5]">
+                    <MediaAssetPicker
+                      label={`Team member ${index + 1} image`}
                       value={member.imageUrl ?? ''}
-                      onChange={(event) =>
+                      onChange={(url) =>
                         setForm((prev) => {
                           const next = [...(prev.teamMembers ?? [])];
-                          next[index] = { ...next[index], imageUrl: event.target.value };
+                          next[index] = { ...next[index], imageUrl: url };
                           return { ...prev, teamMembers: next };
                         })
                       }
+                      helperText="Use a saved image or upload a fresh avatar."
                     />
                   </div>
                   <div className="mt-8 flex-shrink-0">
@@ -403,19 +407,19 @@ function AboutSection() {
                   }))
                 }
               >
-                <Plus className="h-4 w-4 mr-2" /> Add Team Member
+                <Plus className="mr-2 h-4 w-4" /> Add Team Member
               </Button>
             </div>
           </div>
         </form>
       </CardContent>
-      <CardFooter className="bg-muted/50 py-4 border-t flex justify-end">
+      <CardFooter className="flex justify-end border-t bg-muted/50 py-4">
         <Button
           form="about-form"
           type="submit"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save About Content
         </Button>
       </CardFooter>
@@ -455,9 +459,9 @@ function ContactSection() {
   });
 
   return (
-    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/10">
+    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-2xl">
           <Mail className="h-6 w-6 text-primary" /> Contact Content
         </CardTitle>
         <CardDescription>Update your contact information shown on the public site.</CardDescription>
@@ -465,7 +469,7 @@ function ContactSection() {
       <CardContent>
         <form
           id="contact-form"
-          className="space-y-6 max-w-2xl"
+          className="max-w-2xl space-y-6"
           onSubmit={(event) => {
             event.preventDefault();
             updateMutation.mutate(form);
@@ -513,13 +517,13 @@ function ContactSection() {
           </div>
         </form>
       </CardContent>
-      <CardFooter className="bg-muted/50 py-4 border-t flex justify-end">
+      <CardFooter className="flex justify-end border-t bg-muted/50 py-4">
         <Button
           form="contact-form"
           type="submit"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {updateMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save Contact
         </Button>
       </CardFooter>
@@ -567,20 +571,20 @@ function ServicesSection() {
   const services = (servicesQuery.data as ServiceItem[] | undefined) ?? [];
 
   return (
-    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/10">
+    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-2xl">
           <Briefcase className="h-6 w-6 text-primary" /> Services Content
         </CardTitle>
         <CardDescription>Manage the services you offer. You can add, edit, active, or delete them.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid lg:grid-cols-[1fr,1.5fr] gap-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr,1.5fr]">
           <div>
-            <h3 className="text-lg font-semibold mb-4">{editingId ? 'Edit Service' : 'Add New Service'}</h3>
+            <h3 className="mb-4 text-lg font-semibold">{editingId ? 'Edit Service' : 'Add New Service'}</h3>
             <form
               id="services-form"
-              className="space-y-4 bg-muted/30 p-4 rounded-xl border"
+              className="space-y-4 rounded-xl border bg-muted/30 p-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 if (editingId) {
@@ -610,15 +614,12 @@ function ServicesSection() {
                   onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="serviceImage">Image URL</Label>
-                <Input
-                  id="serviceImage"
-                  placeholder="https://example.com/icon.png"
-                  value={form.imageUrl ?? ''}
-                  onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
-                />
-              </div>
+              <MediaAssetPicker
+                label="Service image"
+                value={form.imageUrl ?? ''}
+                onChange={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))}
+                helperText="Choose a service thumbnail from the media library or upload a new one."
+              />
               <div className="space-y-2">
                 <Label htmlFor="servicePrice">Price Label</Label>
                 <Input
@@ -637,13 +638,13 @@ function ServicesSection() {
                 <Label htmlFor="serviceActive" className="cursor-pointer">Active</Label>
               </div>
 
-              <div className="pt-4 flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-4">
                 <Button
                   type="submit"
                   className="w-full"
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : editingId ? <Save className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                  {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : editingId ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
                   {editingId ? 'Update Service' : 'Add Service'}
                 </Button>
                 {editingId && (
@@ -663,25 +664,25 @@ function ServicesSection() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Existing Services</h3>
-            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            <h3 className="mb-4 text-lg font-semibold">Existing Services</h3>
+            <div className="max-h-[600px] space-y-3 overflow-y-auto pr-2 custom-scrollbar">
               {services.map((service) => (
-                <div key={service._id} className="group relative rounded-xl border p-4 bg-background transition-all hover:shadow-md hover:border-primary/50">
-                  <div className="flex justify-between items-start mb-2">
+                <div key={service._id} className="group relative rounded-xl border bg-background p-4 transition-all hover:border-primary/50 hover:shadow-md">
+                  <div className="mb-2 flex items-start justify-between">
                     <div>
-                      <div className="font-semibold text-lg">{service.title}</div>
+                      <div className="text-lg font-semibold">{service.title}</div>
                       <div className="text-sm font-medium text-primary">{service.priceLabel}</div>
                     </div>
                     {service.isActive ? (
-                      <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 shadow-none border-emerald-200">Active</Badge>
+                      <Badge variant="default" className="border-emerald-200 bg-emerald-500/10 text-emerald-600 shadow-none hover:bg-emerald-500/20">Active</Badge>
                     ) : (
                       <Badge variant="secondary">Inactive</Badge>
                     )}
                   </div>
-                  <div className="text-sm text-muted-foreground mb-4 line-clamp-2">{service.description}</div>
-                  
+                  <div className="mb-4 text-sm text-muted-foreground line-clamp-2">{service.description}</div>
+
                   <Separator className="my-3" />
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -698,7 +699,7 @@ function ServicesSection() {
                         });
                       }}
                     >
-                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                      <Edit2 className="mr-2 h-4 w-4" /> Edit
                     </Button>
                     <Button
                       type="button"
@@ -707,13 +708,13 @@ function ServicesSection() {
                       onClick={() => service._id && deleteMutation.mutate(service._id)}
                       disabled={deleteMutation.isPending}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </Button>
                   </div>
                 </div>
               ))}
               {services.length === 0 && (
-                <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground">
+                <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
                   No services found. Add one on the left.
                 </div>
               )}
@@ -767,188 +768,177 @@ function BlogSection() {
   const posts = (blogQuery.data as BlogPost[] | undefined) ?? [];
 
   return (
-    <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/10">
+    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-2xl">
           <FileText className="h-6 w-6 text-primary" /> Blog Posts
         </CardTitle>
-        <CardDescription>Publish updates, news, or articles to your public blog.</CardDescription>
+        <CardDescription>Manage your blog articles and their publication status.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid lg:grid-cols-[1.5fr,1fr] gap-8">
-          <div className="order-2 lg:order-1">
-            <h3 className="text-lg font-semibold mb-4">Existing Posts</h3>
-            <div className="space-y-3 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="grid gap-8 lg:grid-cols-[1fr,1.5fr]">
+          <div>
+            <h3 className="mb-4 text-lg font-semibold">{editingId ? 'Edit Blog Post' : 'Add New Post'}</h3>
+            <form
+              id="blog-form"
+              className="space-y-4 rounded-xl border bg-muted/30 p-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (editingId) {
+                  updateMutation.mutate({ id: editingId, data: form });
+                } else {
+                  createMutation.mutate(form);
+                }
+              }}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="postTitle">Title</Label>
+                <Input
+                  id="postTitle"
+                  placeholder="Introducing our new service..."
+                  value={form.title}
+                  onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="postSlug">Slug</Label>
+                <Input
+                  id="postSlug"
+                  placeholder="new-service"
+                  value={form.slug}
+                  onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="excerpt">Excerpt</Label>
+                <Textarea
+                  id="excerpt"
+                  placeholder="A short summary..."
+                  rows={2}
+                  value={form.excerpt ?? ''}
+                  onChange={(event) => setForm((prev) => ({ ...prev, excerpt: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="body">Body</Label>
+                <Textarea
+                  id="body"
+                  placeholder="Full article content..."
+                  rows={6}
+                  value={form.body ?? ''}
+                  onChange={(event) => setForm((prev) => ({ ...prev, body: event.target.value }))}
+                />
+              </div>
+              <MediaAssetPicker
+                label="Blog cover image"
+                value={form.coverImageUrl ?? ''}
+                onChange={(url) => setForm((prev) => ({ ...prev, coverImageUrl: url }))}
+                helperText="Select a cover image that matches the article."
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="publishedAt">Published At</Label>
+                  <Input
+                    id="publishedAt"
+                    placeholder="2025-01-01"
+                    value={form.publishedAt ?? ''}
+                    onChange={(event) => setForm((prev) => ({ ...prev, publishedAt: event.target.value }))}
+                  />
+                </div>
+                <div className="flex items-center space-x-2 pt-8">
+                  <Switch
+                    id="isPublished"
+                    checked={Boolean(form.isPublished)}
+                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isPublished: checked }))}
+                  />
+                  <Label htmlFor="isPublished" className="cursor-pointer">Published</Label>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-4">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : editingId ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                  {editingId ? 'Update Post' : 'Add Post'}
+                </Button>
+                {editingId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingId(null);
+                      setForm({ title: '', slug: '', excerpt: '', body: '', coverImageUrl: '', publishedAt: '', isPublished: false });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div>
+            <h3 className="mb-4 text-lg font-semibold">Existing Posts</h3>
+            <div className="max-h-[700px] space-y-3 overflow-y-auto pr-2 custom-scrollbar">
               {posts.map((post) => (
-                <div key={post._id} className="group relative rounded-xl border p-4 bg-background transition-all hover:shadow-md hover:border-primary/50">
-                  <div className="flex justify-between items-start mb-2">
+                <div key={post._id} className="group relative rounded-xl border bg-background p-4 transition-all hover:border-primary/50 hover:shadow-md">
+                  <div className="mb-2 flex items-start justify-between">
                     <div>
-                      <div className="font-semibold text-lg">{post.title}</div>
-                      <div className="text-xs font-mono text-muted-foreground mt-1 bg-muted inline-block px-1.5 py-0.5 rounded">/{post.slug}</div>
+                      <div className="text-lg font-semibold">{post.title}</div>
+                      <div className="text-sm text-muted-foreground">{post.slug}</div>
                     </div>
                     {post.isPublished ? (
-                      <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 shadow-none border-emerald-200">Published</Badge>
+                      <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 shadow-none hover:bg-emerald-500/20">Published</Badge>
                     ) : (
                       <Badge variant="secondary">Draft</Badge>
                     )}
                   </div>
-                  <div className="text-sm text-muted-foreground mb-4 line-clamp-2 mt-2">{post.excerpt}</div>
-                  
+                  <div className="mb-4 text-sm text-muted-foreground line-clamp-3">{post.excerpt}</div>
+
                   <Separator className="my-3" />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
-                      {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'No date'}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingId(post._id ?? null);
-                          setForm({
-                            title: post.title ?? '',
-                            slug: post.slug ?? '',
-                            excerpt: post.excerpt ?? '',
-                            body: post.body ?? '',
-                            coverImageUrl: post.coverImageUrl ?? '',
-                            publishedAt: post.publishedAt ?? '',
-                            isPublished: post.isPublished ?? false
-                          });
-                        }}
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" /> Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => post._id && deleteMutation.mutate(post._id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                      </Button>
-                    </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingId(post._id ?? null);
+                        setForm({
+                          title: post.title ?? '',
+                          slug: post.slug ?? '',
+                          excerpt: post.excerpt ?? '',
+                          body: post.body ?? '',
+                          coverImageUrl: post.coverImageUrl ?? '',
+                          publishedAt: post.publishedAt ?? '',
+                          isPublished: post.isPublished ?? false
+                        });
+                      }}
+                    >
+                      <Edit2 className="mr-2 h-4 w-4" /> Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => post._id && deleteMutation.mutate(post._id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </Button>
                   </div>
                 </div>
               ))}
               {posts.length === 0 && (
-                <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground">
-                  No blog posts yet. Write your first one!
+                <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                  No posts found. Add one on the left.
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className="order-1 lg:order-2">
-            <div className="sticky top-4">
-              <h3 className="text-lg font-semibold mb-4">{editingId ? 'Edit Post' : 'Write New Post'}</h3>
-              <form
-                id="blog-form"
-                className="space-y-4 bg-muted/30 p-4 rounded-xl border"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (editingId) {
-                    updateMutation.mutate({ id: editingId, data: form });
-                  } else {
-                    createMutation.mutate(form);
-                  }
-                }}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="postTitle">Title</Label>
-                  <Input
-                    id="postTitle"
-                    placeholder="E.g. 10 Tips for Success"
-                    value={form.title}
-                    onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postSlug">Slug</Label>
-                  <Input
-                    id="postSlug"
-                    placeholder="10-tips"
-                    value={form.slug}
-                    onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postExcerpt">Excerpt</Label>
-                  <Textarea
-                    id="postExcerpt"
-                    placeholder="Short summary..."
-                    rows={2}
-                    value={form.excerpt ?? ''}
-                    onChange={(event) => setForm((prev) => ({ ...prev, excerpt: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postBody">Body</Label>
-                  <Textarea
-                    id="postBody"
-                    placeholder="Write your amazing content here..."
-                    rows={8}
-                    className="font-mono text-sm"
-                    value={form.body ?? ''}
-                    onChange={(event) => setForm((prev) => ({ ...prev, body: event.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="postImage">Cover Image URL</Label>
-                    <Input
-                      id="postImage"
-                      placeholder="https://example.com/cover.png"
-                      value={form.coverImageUrl ?? ''}
-                      onChange={(event) => setForm((prev) => ({ ...prev, coverImageUrl: event.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="postDate">Published Date</Label>
-                    <Input
-                      id="postDate"
-                      type="date"
-                      value={form.publishedAt ? form.publishedAt.split('T')[0] : ''}
-                      onChange={(event) => setForm((prev) => ({ ...prev, publishedAt: event.target.value ? new Date(event.target.value).toISOString() : '' }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Switch
-                    id="postPublished"
-                    checked={Boolean(form.isPublished)}
-                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isPublished: checked }))}
-                  />
-                  <Label htmlFor="postPublished" className="cursor-pointer">Published to public site</Label>
-                </div>
-
-                <div className="pt-4 flex items-center gap-2">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                  >
-                    {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : editingId ? <Save className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                    {editingId ? 'Update Post' : 'Publish Post'}
-                  </Button>
-                  {editingId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingId(null);
-                        setForm({ title: '', slug: '', excerpt: '', body: '', coverImageUrl: '', publishedAt: '', isPublished: false });
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
             </div>
           </div>
         </div>

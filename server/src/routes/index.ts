@@ -13,4 +13,3 @@ export function registerRoutes(app: Application) {
   app.use('/api/content', contentRouter);
   app.use('/api/public', publicRouter);
 }
-

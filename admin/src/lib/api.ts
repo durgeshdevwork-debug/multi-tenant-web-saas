@@ -98,6 +98,18 @@ export type BlogPost = {
   isPublished?: boolean;
 };
 
+export type MediaAsset = {
+  _id: string;
+  url: string;
+  key: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  altText?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // ----------------------
 // Admin APIs
 // ----------------------
@@ -215,4 +227,30 @@ export async function updateBlogPost(id: string, payload: BlogPost) {
 export async function deleteBlogPost(id: string) {
   const res = await apiClient.delete(`/content/blog/${id}`);
   return unwrap(res);
+}
+
+export async function listMediaAssets(): Promise<MediaAsset[]> {
+  const res = await apiClient.get<ApiEnvelope<MediaAsset[]>>('/content/media');
+  return unwrap(res) as MediaAsset[];
+}
+
+export async function uploadMediaAsset(payload: { file: File; altText?: string }): Promise<MediaAsset> {
+  const formData = new FormData();
+  formData.append('file', payload.file);
+  if (payload.altText) {
+    formData.append('altText', payload.altText);
+  }
+
+  const res = await apiClient.post<ApiEnvelope<MediaAsset>>('/content/media', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+
+  return unwrap(res) as MediaAsset;
+}
+
+export async function deleteMediaAsset(id: string): Promise<{ message: string }> {
+  const res = await apiClient.delete<ApiEnvelope<{ message: string }>>(`/content/media/${id}`);
+  return unwrap(res) as { message: string };
 }

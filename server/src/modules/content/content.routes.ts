@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { requireTenantUser } from '../../shared/middlewares/roleMiddleware';
 import * as contentController from './content.controller';
+import { mediaRouter } from '@modules/media/media.routes';
 
 export const contentRouter = Router();
 
 // Protect all content routes (requires an active session and a valid tenantId OR admin role)
 contentRouter.use(requireTenantUser);
+
+// Media library for site assets
+contentRouter.use('/media', mediaRouter);
 
 // Landing
 contentRouter.get('/landing', contentController.getLandingContent);

@@ -16,7 +16,7 @@ async function createAdmin() {
 
     // check if admin already exists
     const existing = await User.findOne({
-      email
+      email,
     });
 
     console.log("Checking if admin user already exists...");
@@ -30,19 +30,17 @@ async function createAdmin() {
       body: {
         email,
         password,
-        name
-      }
+        name,
+        role: "admin",
+      },
     });
 
     console.log("Admin user created successfully", result);
-
-     
 
     console.log("Admin user created successfully");
     console.log("Email:", email);
 
     process.exit(0);
-
   } catch (error) {
     console.error("Admin creation failed:", error);
     process.exit(1);

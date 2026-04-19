@@ -11,7 +11,18 @@
       Welcome to {{ appName }}! Your account for {{ businessName }} has been created.
     </p>
     <p>
-      You can log in using this email address and start editing your website right away.
+      You can log in using this email and the temporary password below.
+    </p>
+    <p>
+      Email: <strong>{{ email }}</strong><br />
+      Temporary password: <strong>{{ password }}</strong>
+    </p>
+    <p>
+      Login here: <a href="{{ loginUrl }}">{{ loginUrl }}</a>
+    </p>
+    <p>
+      If you want to update your password right away, use this link:
+      <a href="{{ resetUrl }}">{{ resetUrl }}</a>
     </p>
     <p>Regards,<br />{{ appName }} Team</p>
   </body>

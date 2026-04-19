@@ -11,6 +11,7 @@ export const authClient = createAuthClient({
 });
 
 export const { useSession, signOut } = authClient;
+export const { requestPasswordReset, resetPassword } = authClient;
 
 export const signInEmail = (payload: { email: string; password: string; rememberMe?: boolean }) => {
     const res = authClient.signIn.email(payload);

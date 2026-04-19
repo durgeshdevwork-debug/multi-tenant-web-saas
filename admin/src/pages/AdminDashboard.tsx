@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import {
   createClient,
   createTemplate,
@@ -24,6 +25,7 @@ import { Loader2, Plus, RefreshCw, Save, FileText, Users, Building } from 'lucid
 const defaultModules = ['landing', 'about', 'services', 'blog', 'contact'];
 
 export function AdminDashboard() {
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [templateForm, setTemplateForm] = useState({ name: '', identifier: '', modules: defaultModules.join(', ') });
   const [clientForm, setClientForm] = useState({
@@ -39,6 +41,10 @@ export function AdminDashboard() {
   });
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [lastApiKey, setLastApiKey] = useState<string | null>(null);
+  const activeTab = useMemo(() => {
+    const pathname = location.pathname.replace(/^\/admin\/?/, '');
+    return (['clients', 'onboard', 'templates'].includes(pathname) ? pathname : 'clients') as 'clients' | 'onboard' | 'templates';
+  }, [location.pathname]);
 
   const templatesQuery = useQuery({
     queryKey: ['templates'],
@@ -169,16 +175,16 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-7xl animate-in fade-in zoom-in-95 duration-500">
+    <div className="container mx-auto max-w-7xl animate-in fade-in zoom-in-95 duration-500 p-4 md:p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-2">Admin Dashboard</h1>
+          <h1 className="mb-2 text-4xl font-extrabold tracking-tight lg:text-5xl">Admin Dashboard</h1>
           <p className="text-lg text-muted-foreground">Manage your tenants, clients, and platform templates.</p>
         </div>
       </div>
 
-      <Tabs defaultValue="clients" className="space-y-6">
-        <TabsList className="bg-muted p-1 rounded-lg">
+      <Tabs value={activeTab} className="space-y-6">
+        <TabsList className="hidden rounded-lg bg-muted p-1">
           <TabsTrigger value="clients" className="rounded-md flex items-center gap-2 px-6">
             <Users className="h-4 w-4" /> Clients
           </TabsTrigger>
@@ -191,59 +197,68 @@ export function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="clients" className="mt-0">
-          <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/20">
+          <Card className="border-none bg-gradient-to-br from-card to-muted/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
                 <Building className="h-6 w-6 text-primary" /> Manage Clients
               </CardTitle>
               <CardDescription>View and update existing tenants on the platform.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-6 lg:grid-cols-[1fr,2fr]">
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="max-h-[600px] space-y-3 overflow-y-auto pr-2 custom-scrollbar">
                   {(clientsQuery.data as Tenant[] | undefined)?.map((client) => (
                     <div
                       key={client._id}
-                      className={`group relative cursor-pointer overflow-hidden rounded-xl border p-4 transition-all hover:shadow-md ${selectedClientId === client._id ? 'border-primary ring-1 ring-primary bg-primary/5' : 'bg-background hover:border-primary/50'}`}
+                      className={`group relative cursor-pointer overflow-hidden rounded-xl border p-4 transition-all hover:shadow-md ${
+                        selectedClientId === client._id ? 'border-primary ring-1 ring-primary bg-primary/5' : 'bg-background hover:border-primary/50'
+                      }`}
                       onClick={() => setSelectedClientId(client._id)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-semibold text-lg">{client.name}</div>
-                        <Badge variant={client.status === 'active' ? 'default' : client.status === 'pending' ? 'secondary' : 'destructive'} className="capitalize">
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-lg font-semibold">{client.name}</div>
+                        <Badge
+                          variant={client.status === 'active' ? 'default' : client.status === 'pending' ? 'secondary' : 'destructive'}
+                          className="capitalize"
+                        >
                           {client.status}
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground grid grid-cols-1 gap-1">
-                        <span className="truncate">Key: <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">{client.truncatedApiKey ?? 'N/A'}</span></span>
+                      <div className="grid grid-cols-1 gap-1 text-sm text-muted-foreground">
+                        <span className="truncate">
+                          Key: <span className="rounded bg-muted px-1 py-0.5 font-mono text-xs">{client.truncatedApiKey ?? 'N/A'}</span>
+                        </span>
                         <span className="truncate">Domain: {client.primaryDomain ?? client.slug}</span>
                       </div>
                     </div>
                   ))}
                   {(clientsQuery.data as Tenant[] | undefined)?.length === 0 && (
-                    <div className="text-center p-8 border border-dashed rounded-xl text-muted-foreground">
+                    <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
                       No clients found.
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-xl border bg-background/50 backdrop-blur shadow-sm overflow-hidden h-fit">
+                <div className="h-fit overflow-hidden rounded-xl border bg-background/50 shadow-sm backdrop-blur">
                   {!selectedClientId ? (
-                    <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground h-full min-h-[400px]">
-                      <Users className="h-12 w-12 mb-4 opacity-20" />
+                    <div className="flex h-full min-h-[400px] flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                      <Users className="mb-4 h-12 w-12 opacity-20" />
                       <p className="text-lg">Select a client from the list to view and edit details.</p>
                     </div>
                   ) : selectedClientQuery.isLoading ? (
-                    <div className="flex items-center justify-center p-12 h-full min-h-[400px]">
+                    <div className="flex h-full min-h-[400px] items-center justify-center p-12">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : selectedClient && clientDetailForm ? (
                     <form onSubmit={handleClientUpdate}>
-                      <div className="p-6 space-y-6">
+                      <div className="space-y-6 p-6">
                         <div className="flex items-center justify-between border-b pb-4">
                           <h3 className="text-xl font-bold">{selectedClient.name}</h3>
-                          <Badge variant="outline" className="font-mono">{selectedClient._id}</Badge>
+                          <Badge variant="outline" className="font-mono">
+                            {selectedClient._id}
+                          </Badge>
                         </div>
-                        
+
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label htmlFor="edit-name">Client Name</Label>
@@ -288,9 +303,9 @@ export function AdminDashboard() {
                         </div>
 
                         <Separator />
-                        
+
                         <div>
-                          <h4 className="font-semibold mb-4">Business Details</h4>
+                          <h4 className="mb-4 font-semibold">Business Details</h4>
                           <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2 md:col-span-2">
                               <Label htmlFor="edit-biz-name">Business Name</Label>
@@ -323,27 +338,34 @@ export function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div className="bg-muted/50 p-6 flex flex-wrap gap-4 items-center justify-between border-t mt-4">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t bg-muted/50 p-6">
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => refreshKeyMutation.mutate(selectedClient._id)}
                           disabled={refreshKeyMutation.isPending}
                         >
-                          {refreshKeyMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                          {refreshKeyMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                          )}
                           Regenerate API Key
                         </Button>
-                        <Button
-                          type="submit"
-                          disabled={updateClientMutation.isPending}
-                        >
-                          {updateClientMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        <Button type="submit" disabled={updateClientMutation.isPending}>
+                          {updateClientMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="mr-2 h-4 w-4" />
+                          )}
                           Save Changes
                         </Button>
                       </div>
                     </form>
                   ) : (
-                    <div className="flex items-center justify-center p-12 text-muted-foreground h-full min-h-[400px]">Client not found.</div>
+                    <div className="flex min-h-[400px] items-center justify-center p-12 text-muted-foreground">
+                      Client not found.
+                    </div>
                   )}
                 </div>
               </div>
@@ -352,20 +374,22 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="onboard" className="mt-0">
-          <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/20">
+          <Card className="border-none bg-gradient-to-br from-card to-muted/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
                 <Plus className="h-6 w-6 text-primary" /> Onboard New Client
               </CardTitle>
               <CardDescription>Create a new tenant and user account on the platform.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleClientSubmit} className="space-y-8 max-w-4xl">
+              <form onSubmit={handleClientSubmit} className="max-w-4xl space-y-8">
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold border-b pb-2">Tenant Details</h3>
+                    <h3 className="border-b pb-2 text-lg font-semibold">Tenant Details</h3>
                     <div className="space-y-2">
-                      <Label htmlFor="clientName">Client Name <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="clientName">
+                        Client Name <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="clientName"
                         placeholder="John Doe"
@@ -375,7 +399,9 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="slug">Slug (Unique) <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="slug">
+                        Slug (Unique) <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="slug"
                         placeholder="john-doe-inc"
@@ -394,12 +420,10 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="templateId">Template <span className="text-destructive">*</span></Label>
-                      <Select
-                        value={clientForm.templateId}
-                        onValueChange={(value) => setClientForm((prev) => ({ ...prev, templateId: value }))}
-                        required
-                      >
+                      <Label htmlFor="templateId">
+                        Template <span className="text-destructive">*</span>
+                      </Label>
+                      <Select value={clientForm.templateId} onValueChange={(value) => setClientForm((prev) => ({ ...prev, templateId: value }))} required>
                         <SelectTrigger id="templateId">
                           <SelectValue placeholder="Select a template" />
                         </SelectTrigger>
@@ -415,9 +439,11 @@ export function AdminDashboard() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold border-b pb-2">User Credentials & Business</h3>
+                    <h3 className="border-b pb-2 text-lg font-semibold">User Credentials & Business</h3>
                     <div className="space-y-2">
-                      <Label htmlFor="email">User Email <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="email">
+                        User Email <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="email"
                         type="email"
@@ -428,7 +454,9 @@ export function AdminDashboard() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Temporary Password <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="password">
+                        Temporary Password <span className="text-destructive">*</span>
+                      </Label>
                       <Input
                         id="password"
                         type="password"
@@ -472,11 +500,10 @@ export function AdminDashboard() {
 
                 {lastApiKey && (
                   <div className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-4 text-emerald-900 dark:text-emerald-200">
-                    <div className="font-semibold flex items-center gap-2 mb-1">
-                      Client Created Successfully
-                    </div>
+                    <div className="mb-1 flex items-center gap-2 font-semibold">Client Created Successfully</div>
                     <div>
-                      New API key: <code className="bg-background px-2 py-1 rounded font-mono text-sm shadow-sm">{lastApiKey}</code>
+                      New API key:{' '}
+                      <code className="rounded bg-background px-2 py-1 font-mono text-sm shadow-sm">{lastApiKey}</code>
                     </div>
                   </div>
                 )}
@@ -491,17 +518,17 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="templates" className="mt-0">
-          <Card className="border-none shadow-xl bg-gradient-to-br from-card to-muted/20">
+          <Card className="border-none bg-gradient-to-br from-card to-muted/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
                 <FileText className="h-6 w-6 text-primary" /> Platform Templates
               </CardTitle>
               <CardDescription>Seed or manage template definitions used during client onboarding.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleTemplateSubmit} className="mb-10 bg-background/50 p-6 rounded-xl border shadow-sm">
-                <h3 className="text-lg font-semibold mb-4">Create New Template</h3>
-                <div className="grid gap-4 md:grid-cols-3 items-end">
+              <form onSubmit={handleTemplateSubmit} className="mb-10 rounded-xl border bg-background/50 p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold">Create New Template</h3>
+                <div className="grid items-end gap-4 md:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="template-name">Template Name</Label>
                     <Input
@@ -540,13 +567,13 @@ export function AdminDashboard() {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {(templatesQuery.data as Template[] | undefined)?.map((template) => (
-                  <Card key={template._id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <Card key={template._id} className="overflow-hidden transition-shadow hover:shadow-md">
                     <CardHeader className="bg-muted/30 pb-4">
                       <CardTitle className="text-lg">{template.name}</CardTitle>
                       <CardDescription className="font-mono text-xs">{template.identifier}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-4">
-                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Included Modules</h4>
+                      <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Included Modules</h4>
                       <div className="flex flex-wrap gap-2">
                         {template.modules?.map((module) => (
                           <Badge key={module} variant="secondary" className="font-normal capitalize shadow-sm">
