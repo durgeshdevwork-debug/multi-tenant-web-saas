@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
+
 import "./globals.css";
 import { publicApi, publicApiConfig } from "./lib/publicApi";
 
@@ -24,38 +26,145 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const site = await publicApi.site();
+  const [site, layout] = await Promise.all([publicApi.site(), publicApi.layout()]);
+  const siteSettings = layout?.siteSettings;
+  const navigation = layout?.navigation;
+  const socialLinks = [
+    { label: "Facebook", href: siteSettings?.social?.facebook },
+    { label: "Instagram", href: siteSettings?.social?.instagram },
+    { label: "LinkedIn", href: siteSettings?.social?.linkedin },
+    { label: "Twitter", href: siteSettings?.social?.twitter },
+  ].filter((item) => Boolean(item.href));
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white text-zinc-900">
-        <header className="border-b bg-white">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-            <div className="text-lg font-semibold">
-              {site?.name ?? "Client Website"}
-            </div>
-            <nav className="flex flex-wrap gap-4 text-sm">
-              <Link href="/">Home</Link>
-              <Link href="/about">About</Link>
-              <Link href="/services">Services</Link>
-              <Link href="/blog">Blog</Link>
-              <Link href="/contact">Contact</Link>
+      <body
+        className="min-h-full flex flex-col bg-white text-zinc-900"
+        style={{
+          fontFamily: siteSettings?.theme?.fontFamily || "var(--font-geist-sans)",
+        }}
+      >
+        <header className="border-b border-zinc-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              {siteSettings?.logo?.url ? (
+                <div className="relative h-11 w-11 overflow-hidden rounded-full border border-zinc-200 bg-zinc-50">
+                  <Image
+                    src={siteSettings.logo.url}
+                    alt={siteSettings.logo.alt ?? siteSettings.siteName ?? "Site logo"}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              ) : null}
+              <div>
+                <div className="text-lg font-semibold">
+                  {siteSettings?.siteName ?? site?.name ?? "Client Website"}
+                </div>
+                {siteSettings?.domain ? (
+                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    {siteSettings.domain}
+                  </div>
+                ) : null}
+              </div>
+            </Link>
+
+            <nav className="flex flex-wrap items-center gap-4 text-sm">
+              {(navigation?.header ?? []).map((item) => (
+                <Link
+                  key={`${item.label}-${item.href}`}
+                  href={item.href}
+                  target={item.newTab ? "_blank" : undefined}
+                  rel={item.newTab ? "noreferrer" : undefined}
+                  className="font-medium text-zinc-700 transition-colors hover:text-zinc-950"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
         </header>
+
         {!publicApiConfig.API_KEY ? (
           <div className="mx-auto w-full max-w-4xl px-6 py-6 text-sm text-red-600">
             Missing `NEXT_PUBLIC_TENANT_API_KEY` in the template environment. Add it to load
             public content.
           </div>
         ) : null}
+
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-10">
           {children}
         </main>
-        <footer className="border-t bg-white py-6 text-center text-xs text-zinc-500">
-          © {new Date().getFullYear()} {site?.name ?? "Client Website"}.
+
+        <footer className="border-t border-zinc-200 bg-zinc-50">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 md:grid-cols-[1.2fr,1fr]">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-950">
+                  {siteSettings?.siteName ?? site?.name ?? "Client Website"}
+                </h2>
+                {siteSettings?.seo?.defaultDescription ? (
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-600">
+                    {siteSettings.seo.defaultDescription}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="grid gap-2 text-sm text-zinc-600">
+                {siteSettings?.business?.email ? <div>{siteSettings.business.email}</div> : null}
+                {siteSettings?.business?.phone ? <div>{siteSettings.business.phone}</div> : null}
+                {siteSettings?.business?.address ? <div>{siteSettings.business.address}</div> : null}
+              </div>
+
+              {socialLinks.length > 0 ? (
+                <div className="flex flex-wrap gap-4 text-sm font-medium">
+                  {socialLinks.map((link) => (
+                    <Link
+                      key={link.label}
+                      href={link.href as string}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-zinc-700 hover:text-zinc-950"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              {(navigation?.footer ?? []).map((section) => (
+                <div key={section.title} className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                    {section.title}
+                  </h3>
+                  <div className="flex flex-col gap-2 text-sm">
+                    {section.links.map((link) => (
+                      <Link
+                        key={`${section.title}-${link.label}-${link.href}`}
+                        href={link.href}
+                        target={link.newTab ? "_blank" : undefined}
+                        rel={link.newTab ? "noreferrer" : undefined}
+                        className="text-zinc-700 transition-colors hover:text-zinc-950"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-zinc-200 px-6 py-4 text-center text-xs text-zinc-500">
+            {navigation?.copyright ??
+              `(c) ${new Date().getFullYear()} ${siteSettings?.siteName ?? site?.name ?? "Client Website"}.`}
+          </div>
         </footer>
       </body>
     </html>

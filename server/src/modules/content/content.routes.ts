@@ -23,6 +23,12 @@ contentRouter.put('/about', contentController.updateAboutContent);
 contentRouter.get('/contact', contentController.getContactContent);
 contentRouter.put('/contact', contentController.updateContactContent);
 
+// Global site configuration
+contentRouter.get('/site-settings', contentController.getSiteSettings);
+contentRouter.put('/site-settings', contentController.updateSiteSettings);
+contentRouter.get('/navigation', contentController.getNavigation);
+contentRouter.put('/navigation', contentController.updateNavigation);
+
 // Services
 contentRouter.get('/services', contentController.listServices);
 contentRouter.post('/services', contentController.createService);

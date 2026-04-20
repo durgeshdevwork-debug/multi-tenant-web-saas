@@ -26,6 +26,7 @@ import {
   Layout,
   ListChecks,
   MagnifyingGlass,
+  SlidersHorizontal,
   Users
 } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -80,17 +81,20 @@ const sidebarConfig: Record<
       { title: 'Services', url: '/services', icon: <Files /> },
       { title: 'Blog', url: '/blog', icon: <ListChecks /> },
       { title: 'Contact', url: '/contact', icon: <MagnifyingGlass /> },
-      { title: 'Media Library', url: '/media', icon: <Image /> }
+      { title: 'Media Library', url: '/media', icon: <Image /> },
+      { title: 'Site Settings', url: '/site-settings', icon: <SlidersHorizontal /> },
+      { title: 'Navigation', url: '/navigation', icon: <Layout /> }
     ],
     documents: [
       { name: 'Landing', url: '/landing', icon: <Files /> },
       { name: 'About', url: '/about', icon: <ArrowSquareOut /> },
       { name: 'Blog', url: '/blog', icon: <ChatsCircle /> },
-      { name: 'Media', url: '/media', icon: <Image /> }
+      { name: 'Media', url: '/media', icon: <Image /> },
+      { name: 'Site Settings', url: '/site-settings', icon: <SlidersHorizontal /> }
     ],
     secondary: [
       { title: 'Contact', url: '/contact', icon: <Gear /> },
-      { title: 'Services', url: '/services', icon: <MagnifyingGlass /> }
+      { title: 'Navigation', url: '/navigation', icon: <MagnifyingGlass /> }
     ]
   }
 };

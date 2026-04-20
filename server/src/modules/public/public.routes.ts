@@ -11,6 +11,7 @@ const tenantScopedRouter = Router({ mergeParams: true });
 tenantScopedRouter.use(requireApiKey);
 
 tenantScopedRouter.get('/site', publicController.getSiteDetails);
+tenantScopedRouter.get('/layout', publicController.getLayout);
 tenantScopedRouter.get('/landing', publicController.getLanding);
 tenantScopedRouter.get('/about', publicController.getAbout);
 tenantScopedRouter.get('/contact', publicController.getContact);

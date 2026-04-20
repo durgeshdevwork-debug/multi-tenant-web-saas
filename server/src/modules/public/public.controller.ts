@@ -14,6 +14,16 @@ export const getSiteDetails = async (req: Request, res: Response) => {
   }
 };
 
+export const getLayout = async (req: Request, res: Response) => {
+  try {
+    const tenant = getTenant(req);
+    const layout = await PublicService.getLayout(tenant);
+    sendSuccess(res, layout);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
 export const getLanding = async (req: Request, res: Response) => {
   try {
     const tenantId = getTenant(req)._id;

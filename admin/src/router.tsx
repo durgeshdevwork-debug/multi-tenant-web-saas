@@ -5,6 +5,8 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { MediaLibraryPage } from './pages/MediaLibraryPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { UserDashboard } from './pages/UserDashboard';
+import { SiteSettingsPage } from './pages/SiteSettingsPage';
+import { NavigationPage } from './pages/NavigationPage';
 
 const router = createBrowserRouter([
   {
@@ -46,6 +48,14 @@ const router = createBrowserRouter([
       {
         path: 'media',
         element: <MediaLibraryPage />
+      },
+      {
+        path: 'site-settings',
+        element: <SiteSettingsPage />
+      },
+      {
+        path: 'navigation',
+        element: <NavigationPage />
       },
       {
         path: 'contact',

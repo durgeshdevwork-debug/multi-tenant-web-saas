@@ -3,6 +3,8 @@ import { AboutContent } from './models/AboutContent';
 import { ContactContent } from './models/ContactContent';
 import { Service } from './models/Service';
 import { BlogPost } from './models/BlogPost';
+import { Navigation } from './models/Navigation';
+import { SiteSettings } from './models/SiteSettings';
 
 export class ContentService {
   // ----------------------
@@ -31,6 +33,30 @@ export class ContentService {
 
   static async updateContact(tenantId: string, data: any) {
     return await ContactContent.findOneAndUpdate({ tenantId }, data, { new: true, upsert: true });
+  }
+
+  static async getSiteSettings(tenantId: string) {
+    return await SiteSettings.findOne({ tenantId });
+  }
+
+  static async updateSiteSettings(tenantId: string, data: any) {
+    return await SiteSettings.findOneAndUpdate({ tenantId }, data, {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true
+    });
+  }
+
+  static async getNavigation(tenantId: string) {
+    return await Navigation.findOne({ tenantId });
+  }
+
+  static async updateNavigation(tenantId: string, data: any) {
+    return await Navigation.findOneAndUpdate({ tenantId }, data, {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true
+    });
   }
 
   // ----------------------

@@ -78,6 +78,60 @@ export type ContactContent = {
   introText?: string;
 };
 
+export type PageKey = 'landing' | 'about' | 'services' | 'blog' | 'contact';
+
+export type SiteSettings = {
+  _id?: string;
+  siteName: string;
+  domain?: string;
+  logo?: {
+    url: string;
+    alt?: string;
+  };
+  favicon?: string;
+  business: {
+    email?: string;
+    phone?: string;
+    address?: string;
+  };
+  social: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  };
+  seo: {
+    defaultTitle?: string;
+    defaultDescription?: string;
+    ogImage?: string;
+  };
+  theme?: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    fontFamily?: string;
+  };
+};
+
+export type NavigationItem = {
+  label: string;
+  pageKey?: PageKey;
+  url?: string;
+  newTab?: boolean;
+  children?: NavigationItem[];
+  href?: string;
+};
+
+export type FooterSection = {
+  title: string;
+  links: NavigationItem[];
+};
+
+export type NavigationConfig = {
+  header: NavigationItem[];
+  footer: FooterSection[];
+  copyright?: string;
+};
+
 export type ServiceItem = {
   _id?: string;
   title: string;
@@ -186,6 +240,26 @@ export async function getContact() {
 
 export async function updateContact(payload: ContactContent) {
   const res = await apiClient.put<ApiEnvelope<ContactContent>>('/content/contact', payload);
+  return unwrap(res);
+}
+
+export async function getSiteSettings() {
+  const res = await apiClient.get<ApiEnvelope<SiteSettings>>('/content/site-settings');
+  return unwrap(res);
+}
+
+export async function updateSiteSettings(payload: SiteSettings) {
+  const res = await apiClient.put<ApiEnvelope<SiteSettings>>('/content/site-settings', payload);
+  return unwrap(res);
+}
+
+export async function getNavigation() {
+  const res = await apiClient.get<ApiEnvelope<NavigationConfig>>('/content/navigation');
+  return unwrap(res);
+}
+
+export async function updateNavigation(payload: NavigationConfig) {
+  const res = await apiClient.put<ApiEnvelope<NavigationConfig>>('/content/navigation', payload);
   return unwrap(res);
 }
 

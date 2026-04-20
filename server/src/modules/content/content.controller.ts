@@ -59,6 +59,42 @@ export const updateContactContent = async (req: Request, res: Response) => {
   }
 };
 
+export const getSiteSettings = async (req: Request, res: Response) => {
+  try {
+    const settings = await ContentService.getSiteSettings(getTenantId(req));
+    sendSuccess(res, settings);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
+export const updateSiteSettings = async (req: Request, res: Response) => {
+  try {
+    const settings = await ContentService.updateSiteSettings(getTenantId(req), req.body);
+    sendSuccess(res, settings);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
+export const getNavigation = async (req: Request, res: Response) => {
+  try {
+    const navigation = await ContentService.getNavigation(getTenantId(req));
+    sendSuccess(res, navigation);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
+export const updateNavigation = async (req: Request, res: Response) => {
+  try {
+    const navigation = await ContentService.updateNavigation(getTenantId(req), req.body);
+    sendSuccess(res, navigation);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
 // Services
 export const listServices = async (req: Request, res: Response) => {
   try {

@@ -17,8 +17,52 @@ const fetchJson = async <T>(path: string): Promise<T | null> => {
   return payload?.data ?? null;
 };
 
+export type PublicNavigationItem = {
+  label: string;
+  pageKey?: 'landing' | 'about' | 'services' | 'blog' | 'contact';
+  url?: string;
+  href: string;
+  newTab?: boolean;
+  children?: PublicNavigationItem[];
+};
+
 export const publicApi = {
   site: () => fetchJson<{ name: string; businessDetails?: { name?: string; address?: string; phone?: string } }>('/site'),
+  layout: () =>
+    fetchJson<{
+      siteSettings: {
+        siteName: string;
+        domain?: string;
+        logo?: { url: string; alt?: string };
+        favicon?: string;
+        business?: {
+          email?: string;
+          phone?: string;
+          address?: string;
+        };
+        social?: {
+          facebook?: string;
+          instagram?: string;
+          linkedin?: string;
+          twitter?: string;
+        };
+        seo?: {
+          defaultTitle?: string;
+          defaultDescription?: string;
+          ogImage?: string;
+        };
+        theme?: {
+          primaryColor?: string;
+          secondaryColor?: string;
+          fontFamily?: string;
+        };
+      };
+      navigation: {
+        header: PublicNavigationItem[];
+        footer: { title: string; links: PublicNavigationItem[] }[];
+        copyright?: string;
+      };
+    }>('/layout'),
   landing: () =>
     fetchJson<{
       heroTitle: string;

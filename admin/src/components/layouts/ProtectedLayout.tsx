@@ -63,6 +63,14 @@ export function ProtectedLayout({ requiredRole }: { requiredRole?: DashboardRole
       media: {
         title: 'Media Library',
         description: 'Upload and reuse site images across every content module.'
+      },
+      'site-settings': {
+        title: 'Site Settings',
+        description: 'Manage branding, contact details, SEO defaults, and global website configuration.'
+      },
+      navigation: {
+        title: 'Navigation',
+        description: 'Configure header and footer menus, section order, and link destinations.'
       }
     };
 

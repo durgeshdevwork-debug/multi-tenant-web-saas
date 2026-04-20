@@ -3,6 +3,9 @@ import { Tenant } from '../tenants/models/Tenant';
 import { LandingContent } from '../content/models/LandingContent';
 import { AboutContent } from '../content/models/AboutContent';
 import { ContactContent } from '../content/models/ContactContent';
+import { SiteSettings } from '../content/models/SiteSettings';
+import { Navigation } from '../content/models/Navigation';
+import { DEFAULT_PAGE_ORDER, PAGE_DEFINITIONS } from '../content/content.defaults';
 import { generateApiKey } from '../../shared/utils/apiKey';
 import { auth } from '../../shared/utils/auth';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -94,6 +97,38 @@ export class AdminService {
     if (modules.includes('contact')) {
       await ContactContent.create({ tenantId: tenant._id, email });
     }
+
+    const defaultHeader = DEFAULT_PAGE_ORDER.filter((pageKey) => modules.includes(pageKey)).map((pageKey) => ({
+      label: PAGE_DEFINITIONS[pageKey].label,
+      pageKey
+    }));
+
+    await SiteSettings.create({
+      tenantId: tenant._id,
+      siteName: clientName,
+      domain: primaryDomain,
+      business: {
+        email,
+        phone: businessDetails?.phone,
+        address: businessDetails?.address
+      },
+      seo: {
+        defaultTitle: clientName,
+        defaultDescription: `Welcome to ${clientName}`
+      }
+    });
+
+    await Navigation.create({
+      tenantId: tenant._id,
+      header: defaultHeader,
+      footer: [
+        {
+          title: 'Explore',
+          links: defaultHeader
+        }
+      ],
+      copyright: `(c) ${new Date().getFullYear()} ${clientName}`
+    });
 
     return { tenant, user: userRes.user, apiKey };
   }
