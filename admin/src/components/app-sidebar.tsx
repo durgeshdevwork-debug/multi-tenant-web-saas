@@ -123,8 +123,8 @@ export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps)
         </SidebarMenu>
 
         <div className="px-2">
-          <button
-            type="button"
+          <Link
+            to={role === 'admin' ? '/admin/onboard' : '/media'}
             className="flex w-full items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-left text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
           >
             <span className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps)
               Quick Create
             </span>
             <span className="text-xs text-muted-foreground">New</span>
-          </button>
+          </Link>
           <p className="mt-2 px-1 text-xs text-sidebar-foreground/70">{config.subtitle}</p>
         </div>
       </SidebarHeader>

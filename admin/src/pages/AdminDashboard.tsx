@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   createClient,
   createTemplate,
@@ -26,6 +26,7 @@ const defaultModules = ['landing', 'about', 'services', 'blog', 'contact'];
 
 export function AdminDashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [templateForm, setTemplateForm] = useState({ name: '', identifier: '', modules: defaultModules.join(', ') });
   const [clientForm, setClientForm] = useState({
@@ -174,6 +175,10 @@ export function AdminDashboard() {
     });
   };
 
+  const handleTabChange = (value: string) => {
+    navigate(`/admin/${value}`);
+  };
+
   return (
     <div className="container mx-auto max-w-7xl animate-in fade-in zoom-in-95 duration-500 p-4 md:p-8">
       <div className="mb-8 flex items-center justify-between">
@@ -183,8 +188,9 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <Tabs value={activeTab} className="space-y-6">
-        <TabsList className="hidden rounded-lg bg-muted p-1">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="inline-flex rounded-lg bg-muted p-1">
           <TabsTrigger value="clients" className="rounded-md flex items-center gap-2 px-6">
             <Users className="h-4 w-4" /> Clients
           </TabsTrigger>
@@ -194,15 +200,35 @@ export function AdminDashboard() {
           <TabsTrigger value="templates" className="rounded-md flex items-center gap-2 px-6">
             <FileText className="h-4 w-4" /> Templates
           </TabsTrigger>
-        </TabsList>
+          </TabsList>
+
+          {activeTab === 'clients' ? (
+            <Button asChild>
+              <Link to="/admin/onboard">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Client
+              </Link>
+            </Button>
+          ) : null}
+        </div>
 
         <TabsContent value="clients" className="mt-0">
           <Card className="border-none bg-gradient-to-br from-card to-muted/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <Building className="h-6 w-6 text-primary" /> Manage Clients
-              </CardTitle>
-              <CardDescription>View and update existing tenants on the platform.</CardDescription>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <Building className="h-6 w-6 text-primary" /> Manage Clients
+                  </CardTitle>
+                  <CardDescription>View and update existing tenants on the platform.</CardDescription>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/admin/onboard">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Client
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid gap-6 lg:grid-cols-[1fr,2fr]">
