@@ -17,17 +17,58 @@ const fetchJson = async <T>(path: string): Promise<T | null> => {
   return payload?.data ?? null;
 };
 
-export type PublicNavigationItem = {
-  label: string;
-  pageKey?: 'landing' | 'about' | 'services' | 'blog' | 'contact';
+export type PublicSectionItem = {
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  label?: string;
   url?: string;
-  href: string;
-  newTab?: boolean;
-  children?: PublicNavigationItem[];
+};
+
+export type PublicSection = {
+  id: string;
+  type: 'hero' | 'richText' | 'features' | 'cta' | 'gallery';
+  name?: string;
+  content: {
+    eyebrow?: string;
+    heading?: string;
+    body?: string;
+    imageUrl?: string;
+    buttonLabel?: string;
+    buttonUrl?: string;
+    items?: PublicSectionItem[];
+  };
+};
+
+export type PublicPage = {
+  id: string;
+  title: string;
+  slug: string;
+  path: string;
+  navigationLabel?: string;
+  showInHeader: boolean;
+  showInFooter: boolean;
+  showHeader: boolean;
+  showFooter: boolean;
+  isHomePage: boolean;
+  sections: PublicSection[];
+  seo: {
+    metaTitle?: string;
+    metaDescription?: string;
+    ogImage?: string;
+  };
+  children?: PublicPage[];
 };
 
 export const publicApi = {
-  site: () => fetchJson<{ name: string; businessDetails?: { name?: string; address?: string; phone?: string } }>('/site'),
+  site: () =>
+    fetchJson<{
+      name: string;
+      businessDetails?: { name?: string; address?: string; phone?: string; email?: string };
+      logo?: { url: string; alt?: string };
+      seo?: { defaultTitle?: string; defaultDescription?: string; ogImage?: string };
+      theme?: { primaryColor?: string; secondaryColor?: string; fontFamily?: string };
+    }>('/site'),
   layout: () =>
     fetchJson<{
       siteSettings: {
@@ -58,62 +99,12 @@ export const publicApi = {
         };
       };
       navigation: {
-        header: PublicNavigationItem[];
-        footer: { title: string; links: PublicNavigationItem[] }[];
-        copyright?: string;
+        header: PublicPage[];
+        footer: PublicPage[];
       };
     }>('/layout'),
-  landing: () =>
-    fetchJson<{
-      heroTitle: string;
-      heroSubtitle?: string;
-      heroImageUrl?: string;
-      primaryCtaText?: string;
-      primaryCtaUrl?: string;
-      highlights?: { title: string; description: string }[];
-    }>('/landing'),
-  about: () =>
-    fetchJson<{
-      heading: string;
-      description: string;
-      showTeam?: boolean;
-      teamMembers?: { name: string; role?: string; imageUrl?: string }[];
-    }>('/about'),
-  services: () =>
-    fetchJson<
-      {
-        title: string;
-        description?: string;
-        imageUrl?: string;
-        priceLabel?: string;
-      }[]
-    >('/services'),
-  blog: () =>
-    fetchJson<
-      {
-        title: string;
-        slug: string;
-        excerpt?: string;
-        coverImageUrl?: string;
-        publishedAt?: string;
-      }[]
-    >('/blog'),
-  blogPost: (slug: string) =>
-    fetchJson<{
-      title: string;
-      slug: string;
-      excerpt?: string;
-      body?: string;
-      coverImageUrl?: string;
-      publishedAt?: string;
-    }>(`/blog/${slug}`),
-  contact: () =>
-    fetchJson<{
-      address?: string;
-      phone?: string;
-      email?: string;
-      introText?: string;
-    }>('/contact')
+  pages: () => fetchJson<PublicPage[]>('/pages'),
+  pageByPath: (path: string) => fetchJson<PublicPage>(`/page?path=${encodeURIComponent(path)}`)
 };
 
 export const publicApiConfig = { API_BASE_URL, API_KEY };

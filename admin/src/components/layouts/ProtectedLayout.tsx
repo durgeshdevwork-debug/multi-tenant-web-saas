@@ -39,51 +39,41 @@ export function ProtectedLayout({ requiredRole }: { requiredRole?: DashboardRole
       };
     }
 
+    if (pathname === 'pages') {
+      return {
+        title: 'Pages',
+        description: 'Create, edit, and structure pages for the public website.'
+      };
+    }
+
+    if (pathname.startsWith('pages/')) {
+      return {
+        title: pathname === 'pages/new' ? 'Create Page' : 'Edit Page',
+        description: 'Manage sections, SEO, hierarchy, and publishing controls for this page.'
+      };
+    }
+
     const userMeta: Record<string, { title: string; description: string }> = {
-      landing: {
-        title: 'Landing Page',
-        description: 'Update the hero, calls to action, and highlights that introduce the website.'
-      },
-      about: {
-        title: 'About Page',
-        description: 'Manage company story, team members, and supporting content for the about page.'
-      },
-      services: {
-        title: 'Services',
-        description: 'Maintain your service offerings and reuse media assets across the site.'
-      },
-      blog: {
-        title: 'Blog',
-        description: 'Create and edit articles, then attach existing or newly uploaded media.'
-      },
-      contact: {
-        title: 'Contact',
-        description: 'Edit the contact section that appears on the public website.'
-      },
       media: {
         title: 'Media Library',
-        description: 'Upload and reuse site images across every content module.'
+        description: 'Upload and reuse site images across every page and section.'
       },
       'site-settings': {
         title: 'Site Settings',
         description: 'Manage branding, contact details, SEO defaults, and global website configuration.'
-      },
-      navigation: {
-        title: 'Navigation',
-        description: 'Configure header and footer menus, section order, and link destinations.'
       }
     };
 
     return userMeta[pathname] ?? {
       title: 'Content Workspace',
-      description: 'Track publishing progress, review sections, and keep the site ready to ship.'
+      description: 'Track publishing progress, review pages, and keep the site ready to ship.'
     };
   }, [location.pathname, requiredRole]);
 
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading dashboard…</p>
+        <p className="text-sm text-muted-foreground">Loading dashboard...</p>
       </div>
     );
   }
@@ -120,7 +110,6 @@ export function ProtectedLayout({ requiredRole }: { requiredRole?: DashboardRole
       <SidebarInset className="bg-background">
         <SiteHeader
           title={pageMeta.title}
-          // description={pageMeta.description}
           roleLabel={roleLabel}
           onSignOut={async () => {
             await signOut();

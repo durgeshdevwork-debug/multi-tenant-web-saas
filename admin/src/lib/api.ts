@@ -5,15 +5,12 @@ export const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUr
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // Crucial for cross-origin cookies if backend and frontend are on different ports
+  withCredentials: true
 });
 
-// Optional: Add response interceptors to handle global errors like 401
 apiClient.interceptors.response.use(
   (response) => response.data,
-  (error) => {
-    return Promise.reject(error.response?.data || error);
-  }
+  (error) => Promise.reject(error.response?.data || error)
 );
 
 export type ApiEnvelope<T> = {
@@ -52,34 +49,6 @@ export type Tenant = {
   };
 };
 
-export type LandingContent = {
-  _id?: string;
-  heroTitle: string;
-  heroSubtitle?: string;
-  heroImageUrl?: string;
-  primaryCtaText?: string;
-  primaryCtaUrl?: string;
-  highlights: { title: string; description: string }[];
-};
-
-export type AboutContent = {
-  _id?: string;
-  heading: string;
-  description: string;
-  showTeam?: boolean;
-  teamMembers?: { name: string; role?: string; imageUrl?: string }[];
-};
-
-export type ContactContent = {
-  _id?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  introText?: string;
-};
-
-export type PageKey = 'landing' | 'about' | 'services' | 'blog' | 'contact';
-
 export type SiteSettings = {
   _id?: string;
   siteName: string;
@@ -112,44 +81,55 @@ export type SiteSettings = {
   };
 };
 
-export type NavigationItem = {
-  label: string;
-  pageKey?: PageKey;
-  url?: string;
-  newTab?: boolean;
-  children?: NavigationItem[];
-  href?: string;
-};
+export type PageSectionType = 'hero' | 'richText' | 'features' | 'cta' | 'gallery';
 
-export type FooterSection = {
-  title: string;
-  links: NavigationItem[];
-};
-
-export type NavigationConfig = {
-  header: NavigationItem[];
-  footer: FooterSection[];
-  copyright?: string;
-};
-
-export type ServiceItem = {
-  _id?: string;
-  title: string;
+export type PageSectionItem = {
+  title?: string;
   description?: string;
   imageUrl?: string;
-  priceLabel?: string;
-  isActive?: boolean;
+  label?: string;
+  url?: string;
 };
 
-export type BlogPost = {
+export type PageSection = {
+  id: string;
+  type: PageSectionType;
+  name?: string;
+  content: {
+    eyebrow?: string;
+    heading?: string;
+    body?: string;
+    imageUrl?: string;
+    buttonLabel?: string;
+    buttonUrl?: string;
+    items?: PageSectionItem[];
+  };
+  styles?: Record<string, string>;
+};
+
+export type Page = {
   _id?: string;
+  id?: string;
+  tenantId?: string;
+  parentId?: string | null;
   title: string;
   slug: string;
-  excerpt?: string;
-  body?: string;
-  coverImageUrl?: string;
-  publishedAt?: string;
-  isPublished?: boolean;
+  path?: string;
+  navigationLabel?: string;
+  showInHeader: boolean;
+  showInFooter: boolean;
+  showHeader: boolean;
+  showFooter: boolean;
+  isHomePage: boolean;
+  isPublished: boolean;
+  sortOrder: number;
+  sections: PageSection[];
+  seo: {
+    metaTitle?: string;
+    metaDescription?: string;
+    ogImage?: string;
+  };
+  children?: Page[];
 };
 
 export type MediaAsset = {
@@ -163,10 +143,6 @@ export type MediaAsset = {
   createdAt: string;
   updatedAt: string;
 };
-
-// ----------------------
-// Admin APIs
-// ----------------------
 
 export async function getTemplates() {
   const res = await apiClient.get<ApiEnvelope<Template[]>>('/admin/templates');
@@ -209,40 +185,6 @@ export async function regenerateApiKey(id: string) {
   return await apiClient.post(`/admin/clients/${id}/refresh-key`);
 }
 
-// ----------------------
-// Content APIs (Tenant/User)
-// ----------------------
-
-export async function getLanding() {
-  const res = await apiClient.get<ApiEnvelope<LandingContent>>('/content/landing');
-  return unwrap(res);
-}
-
-export async function updateLanding(payload: LandingContent) {
-  const res = await apiClient.put<ApiEnvelope<LandingContent>>('/content/landing', payload);
-  return unwrap(res);
-}
-
-export async function getAbout() {
-  const res = await apiClient.get<ApiEnvelope<AboutContent>>('/content/about');
-  return unwrap(res);
-}
-
-export async function updateAbout(payload: AboutContent) {
-  const res = await apiClient.put<ApiEnvelope<AboutContent>>('/content/about', payload);
-  return unwrap(res);
-}
-
-export async function getContact() {
-  const res = await apiClient.get<ApiEnvelope<ContactContent>>('/content/contact');
-  return unwrap(res);
-}
-
-export async function updateContact(payload: ContactContent) {
-  const res = await apiClient.put<ApiEnvelope<ContactContent>>('/content/contact', payload);
-  return unwrap(res);
-}
-
 export async function getSiteSettings() {
   const res = await apiClient.get<ApiEnvelope<SiteSettings>>('/content/site-settings');
   return unwrap(res);
@@ -253,53 +195,33 @@ export async function updateSiteSettings(payload: SiteSettings) {
   return unwrap(res);
 }
 
-export async function getNavigation() {
-  const res = await apiClient.get<ApiEnvelope<NavigationConfig>>('/content/navigation');
+export async function listPages() {
+  const res = await apiClient.get<ApiEnvelope<Page[]>>('/content/pages');
   return unwrap(res);
 }
 
-export async function updateNavigation(payload: NavigationConfig) {
-  const res = await apiClient.put<ApiEnvelope<NavigationConfig>>('/content/navigation', payload);
+export async function listPageTree() {
+  const res = await apiClient.get<ApiEnvelope<Page[]>>('/content/pages/tree');
   return unwrap(res);
 }
 
-export async function listServices() {
-  const res = await apiClient.get<ApiEnvelope<ServiceItem[]>>('/content/services');
+export async function getPage(id: string) {
+  const res = await apiClient.get<ApiEnvelope<Page>>(`/content/pages/${id}`);
   return unwrap(res);
 }
 
-export async function createService(payload: ServiceItem) {
-  const res = await apiClient.post('/content/services', payload);
+export async function createPage(payload: Page) {
+  const res = await apiClient.post<ApiEnvelope<Page>>('/content/pages', payload);
   return unwrap(res);
 }
 
-export async function updateService(id: string, payload: ServiceItem) {
-  const res = await apiClient.put(`/content/services/${id}`, payload);
+export async function updatePage(id: string, payload: Page) {
+  const res = await apiClient.put<ApiEnvelope<Page>>(`/content/pages/${id}`, payload);
   return unwrap(res);
 }
 
-export async function deleteService(id: string) {
-  const res = await apiClient.delete(`/content/services/${id}`);
-  return unwrap(res);
-}
-
-export async function listBlogPosts() {
-  const res = await apiClient.get<ApiEnvelope<BlogPost[]>>('/content/blog');
-  return unwrap(res);
-}
-
-export async function createBlogPost(payload: BlogPost) {
-  const res = await apiClient.post('/content/blog', payload);
-  return unwrap(res);
-}
-
-export async function updateBlogPost(id: string, payload: BlogPost) {
-  const res = await apiClient.put(`/content/blog/${id}`, payload);
-  return unwrap(res);
-}
-
-export async function deleteBlogPost(id: string) {
-  const res = await apiClient.delete(`/content/blog/${id}`);
+export async function deletePage(id: string) {
+  const res = await apiClient.delete<ApiEnvelope<{ deletedIds: string[] }>>(`/content/pages/${id}`);
   return unwrap(res);
 }
 

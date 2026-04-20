@@ -24,64 +24,23 @@ export const getLayout = async (req: Request, res: Response) => {
   }
 };
 
-export const getLanding = async (req: Request, res: Response) => {
+export const listPages = async (req: Request, res: Response) => {
   try {
-    const tenantId = getTenant(req)._id;
-    const content = await PublicService.getLanding(tenantId);
-    sendSuccess(res, content);
+    const pages = await PublicService.getPages(String(getTenant(req)._id));
+    sendSuccess(res, pages);
   } catch (error: any) {
     sendError(res, error.message, 500);
   }
 };
 
-export const getAbout = async (req: Request, res: Response) => {
+export const getPageByPath = async (req: Request, res: Response) => {
   try {
-    const tenantId = getTenant(req)._id;
-    const content = await PublicService.getAbout(tenantId);
-    sendSuccess(res, content);
-  } catch (error: any) {
-    sendError(res, error.message, 500);
-  }
-};
+    const path = ((req.query.path as string | undefined) ?? '/').trim() || '/';
+    const page = await PublicService.getPageByPath(String(getTenant(req)._id), path);
 
-export const getContact = async (req: Request, res: Response) => {
-  try {
-    const tenantId = getTenant(req)._id;
-    const content = await PublicService.getContact(tenantId);
-    sendSuccess(res, content);
-  } catch (error: any) {
-    sendError(res, error.message, 500);
-  }
-};
+    if (!page) return sendError(res, 'Page not found', 404);
 
-export const getServices = async (req: Request, res: Response) => {
-  try {
-    const tenantId = getTenant(req)._id;
-    const services = await PublicService.getServices(tenantId);
-    sendSuccess(res, services);
-  } catch (error: any) {
-    sendError(res, error.message, 500);
-  }
-};
-
-export const getBlogList = async (req: Request, res: Response) => {
-  try {
-    const tenantId = getTenant(req)._id;
-    const posts = await PublicService.getBlogList(tenantId);
-    sendSuccess(res, posts);
-  } catch (error: any) {
-    sendError(res, error.message, 500);
-  }
-};
-
-export const getBlogPost = async (req: Request, res: Response) => {
-  try {
-    const tenantId = getTenant(req)._id;
-    const post = await PublicService.getBlogPost(tenantId, req.params.slug as string);
-    
-    if (!post) return sendError(res, 'Post not found', 404);
-    
-    sendSuccess(res, post);
+    sendSuccess(res, page);
   } catch (error: any) {
     sendError(res, error.message, 500);
   }

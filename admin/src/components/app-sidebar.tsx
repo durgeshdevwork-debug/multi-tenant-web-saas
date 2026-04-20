@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { NavDocuments } from '@/components/nav-documents';
 import { NavMain } from '@/components/nav-main';
@@ -8,28 +9,36 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 import type { DashboardRole } from '@/lib/roles';
 import {
-  ArrowSquareOut,
   ChartBar,
   ChatsCircle,
   Command,
   Files,
+  FolderOpen,
   Gear,
-  House,
   Image,
   Layout,
   ListChecks,
   MagnifyingGlass,
+  PlusSquare,
   SlidersHorizontal,
   Users
 } from '@phosphor-icons/react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { listPageTree, type Page } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 const sidebarConfig: Record<
   DashboardRole,
@@ -41,9 +50,9 @@ const sidebarConfig: Record<
       email: string;
       avatar?: string;
     };
-    navMain: { title: string; url: string; icon: React.ReactNode }[];
-    documents: { name: string; url: string; icon: React.ReactNode }[];
-    secondary: { title: string; url: string; icon: React.ReactNode }[];
+    navMain?: { title: string; url: string; icon: React.ReactNode }[];
+    documents?: { name: string; url: string; icon: React.ReactNode }[];
+    secondary?: { title: string; url: string; icon: React.ReactNode }[];
   }
 > = {
   admin: {
@@ -70,32 +79,11 @@ const sidebarConfig: Record<
   },
   user: {
     brand: 'Tenant Portal',
-    subtitle: 'Content workspace and publishing tasks',
+    subtitle: 'Pages, branding, and media for your website',
     user: {
       name: 'shadcn',
       email: 'm@example.com'
-    },
-    navMain: [
-      { title: 'Landing', url: '/landing', icon: <House /> },
-      { title: 'About', url: '/about', icon: <Layout /> },
-      { title: 'Services', url: '/services', icon: <Files /> },
-      { title: 'Blog', url: '/blog', icon: <ListChecks /> },
-      { title: 'Contact', url: '/contact', icon: <MagnifyingGlass /> },
-      { title: 'Media Library', url: '/media', icon: <Image /> },
-      { title: 'Site Settings', url: '/site-settings', icon: <SlidersHorizontal /> },
-      { title: 'Navigation', url: '/navigation', icon: <Layout /> }
-    ],
-    documents: [
-      { name: 'Landing', url: '/landing', icon: <Files /> },
-      { name: 'About', url: '/about', icon: <ArrowSquareOut /> },
-      { name: 'Blog', url: '/blog', icon: <ChatsCircle /> },
-      { name: 'Media', url: '/media', icon: <Image /> },
-      { name: 'Site Settings', url: '/site-settings', icon: <SlidersHorizontal /> }
-    ],
-    secondary: [
-      { title: 'Contact', url: '/contact', icon: <Gear /> },
-      { title: 'Navigation', url: '/navigation', icon: <MagnifyingGlass /> }
-    ]
+    }
   }
 };
 
@@ -109,6 +97,132 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   onSignOut: () => void;
 };
 
+function PageTreeItem({ page }: { page: Page }) {
+  const hasChildren = Boolean(page.children?.length);
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild tooltip={page.title}>
+        <NavLink
+          to={`/pages/${page.id ?? page._id}`}
+          className={({ isActive }) =>
+            cn('flex w-full items-center gap-2 rounded-none', isActive && 'bg-sidebar-accent text-sidebar-accent-foreground')
+          }
+        >
+          <FolderOpen />
+          <span>{page.navigationLabel || page.title}</span>
+        </NavLink>
+      </SidebarMenuButton>
+
+      {hasChildren ? (
+        <SidebarMenuSub>
+          {page.children?.map((child) => (
+            <SidebarMenuSubItem key={child.id ?? child._id}>
+              <SidebarMenuSubButton asChild>
+                <NavLink
+                  to={`/pages/${child.id ?? child._id}`}
+                  className={({ isActive }) =>
+                    cn('flex w-full items-center gap-2 rounded-none', isActive && 'bg-sidebar-accent text-sidebar-accent-foreground')
+                  }
+                >
+                  <span>{child.navigationLabel || child.title}</span>
+                </NavLink>
+              </SidebarMenuSubButton>
+              {child.children?.length ? <SidebarMenuSub>{child.children.map((nested) => <PageTreeItem key={nested.id ?? nested._id} page={nested} />)}</SidebarMenuSub> : null}
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      ) : null}
+    </SidebarMenuItem>
+  );
+}
+
+function UserSidebarContent() {
+  const pageTreeQuery = useQuery({
+    queryKey: ['content', 'pages', 'tree'],
+    queryFn: listPageTree
+  });
+
+  const pageTree = (pageTreeQuery.data as Page[] | undefined) ?? [];
+
+  return (
+    <>
+      <SidebarGroup>
+        <SidebarGroupContent className="flex flex-col gap-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Create Page" className="min-w-8 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
+                <Link to="/pages/new">
+                  <PlusSquare />
+                  <span>Create Page</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupLabel>Pages</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="All Pages">
+                <NavLink
+                  to="/pages"
+                  className={({ isActive }) =>
+                    cn('flex w-full items-center gap-2 rounded-none', isActive && 'bg-sidebar-accent text-sidebar-accent-foreground')
+                  }
+                >
+                  <Layout />
+                  <span>Pages Overview</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {pageTree.map((page) => (
+              <PageTreeItem key={page.id ?? page._id} page={page} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupLabel>Global</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Site Settings">
+                <NavLink
+                  to="/site-settings"
+                  className={({ isActive }) =>
+                    cn('flex w-full items-center gap-2 rounded-none', isActive && 'bg-sidebar-accent text-sidebar-accent-foreground')
+                  }
+                >
+                  <SlidersHorizontal />
+                  <span>Site Settings</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Media Library">
+                <NavLink
+                  to="/media"
+                  className={({ isActive }) =>
+                    cn('flex w-full items-center gap-2 rounded-none', isActive && 'bg-sidebar-accent text-sidebar-accent-foreground')
+                  }
+                >
+                  <Image />
+                  <span>Media Library</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </>
+  );
+}
+
 export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps) {
   const config = sidebarConfig[role];
 
@@ -118,7 +232,7 @@ export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps)
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
-              <Link to={role === 'admin' ? '/admin/clients' : '/landing'}>
+              <Link to={role === 'admin' ? '/admin/clients' : '/pages'}>
                 <Command className="size-5" />
                 <span className="text-base font-semibold">{config.brand}</span>
               </Link>
@@ -128,14 +242,14 @@ export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps)
 
         <div className="px-2">
           <Link
-            to={role === 'admin' ? '/admin/onboard' : '/media'}
+            to={role === 'admin' ? '/admin/onboard' : '/pages/new'}
             className="flex w-full items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-left text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
           >
             <span className="flex items-center gap-2">
               <span className="inline-flex size-6 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 +
               </span>
-              Quick Create
+              {role === 'admin' ? 'Quick Create' : 'New Page'}
             </span>
             <span className="text-xs text-muted-foreground">New</span>
           </Link>
@@ -144,9 +258,15 @@ export function AppSidebar({ role, user, onSignOut, ...props }: AppSidebarProps)
       </SidebarHeader>
 
       <SidebarContent className="gap-4">
-        <NavMain items={config.navMain} />
-        <NavDocuments items={config.documents} />
-        <NavSecondary items={config.secondary} className="mt-auto" />
+        {role === 'admin' ? (
+          <>
+            <NavMain items={config.navMain ?? []} />
+            <NavDocuments items={config.documents ?? []} />
+            <NavSecondary items={config.secondary ?? []} className="mt-auto" />
+          </>
+        ) : (
+          <UserSidebarContent />
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border/70 p-2">

@@ -47,7 +47,7 @@ export function MediaLibraryPage() {
             <div>
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Upload and reuse site images.</h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
-                Every image you upload here is tenant-scoped and can be reused from the Landing, About, Services, and Blog editors.
+                Every image you upload here is tenant-scoped and can be reused across your dynamic pages and section blocks.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

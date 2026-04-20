@@ -1,12 +1,11 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { ProtectedLayout } from './components/layouts/ProtectedLayout';
 import { LoginPage } from './pages/LoginPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { MediaLibraryPage } from './pages/MediaLibraryPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { UserDashboard } from './pages/UserDashboard';
 import { SiteSettingsPage } from './pages/SiteSettingsPage';
-import { NavigationPage } from './pages/NavigationPage';
+import { PagesWorkspacePage } from './pages/PagesWorkspacePage';
 
 const router = createBrowserRouter([
   {
@@ -27,23 +26,19 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/landing" replace />
+        element: <Navigate to="/pages" replace />
       },
       {
-        path: 'landing',
-        element: <UserDashboard />
+        path: 'pages',
+        element: <PagesWorkspacePage />
       },
       {
-        path: 'about',
-        element: <UserDashboard />
+        path: 'pages/new',
+        element: <PagesWorkspacePage />
       },
       {
-        path: 'services',
-        element: <UserDashboard />
-      },
-      {
-        path: 'blog',
-        element: <UserDashboard />
+        path: 'pages/:pageId',
+        element: <PagesWorkspacePage />
       },
       {
         path: 'media',
@@ -52,14 +47,6 @@ const router = createBrowserRouter([
       {
         path: 'site-settings',
         element: <SiteSettingsPage />
-      },
-      {
-        path: 'navigation',
-        element: <NavigationPage />
-      },
-      {
-        path: 'contact',
-        element: <UserDashboard />
       }
     ]
   },

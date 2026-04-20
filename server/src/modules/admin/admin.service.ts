@@ -1,11 +1,8 @@
 import { Template } from '../templates/models/Template';
 import { Tenant } from '../tenants/models/Tenant';
-import { LandingContent } from '../content/models/LandingContent';
-import { AboutContent } from '../content/models/AboutContent';
-import { ContactContent } from '../content/models/ContactContent';
 import { SiteSettings } from '../content/models/SiteSettings';
-import { Navigation } from '../content/models/Navigation';
-import { DEFAULT_PAGE_ORDER, PAGE_DEFINITIONS } from '../content/content.defaults';
+import { Page } from '../content/models/Page';
+import { buildInitialPages } from '../content/page.defaults';
 import { generateApiKey } from '../../shared/utils/apiKey';
 import { auth } from '../../shared/utils/auth';
 import { fromNodeHeaders } from 'better-auth/node';
@@ -48,7 +45,7 @@ export class AdminService {
         name: clientName,
         role: 'user',
         tenantId: String(tenant._id)
-      } as any, // bypassing TS strict check for custom additional fields
+      } as any,
       headers: fromNodeHeaders(headers)
     });
 
@@ -87,22 +84,6 @@ export class AdminService {
       console.error('Failed to send password reset email after user creation', error);
     }
 
-    const modules = template.modules || [];
-    if (modules.includes('landing')) {
-      await LandingContent.create({ tenantId: tenant._id, heroTitle: `Welcome to ${clientName}`, highlights: [] });
-    }
-    if (modules.includes('about')) {
-      await AboutContent.create({ tenantId: tenant._id, heading: `About ${clientName}`, description: 'Setup content', teamMembers: [] });
-    }
-    if (modules.includes('contact')) {
-      await ContactContent.create({ tenantId: tenant._id, email });
-    }
-
-    const defaultHeader = DEFAULT_PAGE_ORDER.filter((pageKey) => modules.includes(pageKey)).map((pageKey) => ({
-      label: PAGE_DEFINITIONS[pageKey].label,
-      pageKey
-    }));
-
     await SiteSettings.create({
       tenantId: tenant._id,
       siteName: clientName,
@@ -118,17 +99,20 @@ export class AdminService {
       }
     });
 
-    await Navigation.create({
-      tenantId: tenant._id,
-      header: defaultHeader,
-      footer: [
-        {
-          title: 'Explore',
-          links: defaultHeader
-        }
-      ],
-      copyright: `(c) ${new Date().getFullYear()} ${clientName}`
-    });
+    const starterPages = buildInitialPages(clientName, template.modules || []);
+    await Page.insertMany(
+      starterPages.map((page) => ({
+        ...page,
+        tenantId: tenant._id,
+        parentId: null,
+        showHeader: true,
+        showFooter: true,
+        isPublished: true,
+        navigationLabel: page.navigationLabel || page.title,
+        showInHeader: page.showInHeader ?? true,
+        showInFooter: page.showInFooter ?? true
+      }))
+    );
 
     return { tenant, user: userRes.user, apiKey };
   }
@@ -151,11 +135,7 @@ export class AdminService {
 
   static async regenerateApiKey(id: string) {
     const { apiKey, apiKeyHash, truncatedApiKey } = generateApiKey();
-    const tenant = await Tenant.findByIdAndUpdate(
-      id,
-      { apiKeyHash, truncatedApiKey },
-      { new: true }
-    );
+    const tenant = await Tenant.findByIdAndUpdate(id, { apiKeyHash, truncatedApiKey }, { new: true });
     if (!tenant) throw new Error('Tenant not found');
     return { tenant, apiKey };
   }
