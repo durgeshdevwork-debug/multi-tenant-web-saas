@@ -22,7 +22,7 @@ export const seedTemplate = async (req: Request, res: Response) => {
 
 export const createClient = async (req: Request, res: Response) => {
   try {
-    const result = await AdminService.createClient(req.body, req.headers);
+    const result = await AdminService.createClient(req.body);
     // Returning apiKey at the top layer
     res.status(201).json({ success: true, data: { tenant: result.tenant, user: result.user }, apiKey: result.apiKey });
   } catch (error: any) {

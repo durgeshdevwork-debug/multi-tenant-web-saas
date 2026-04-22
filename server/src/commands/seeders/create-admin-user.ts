@@ -1,7 +1,9 @@
 import { connectDB } from "@configs/db";
 import { env } from "@configs/env";
-import { User } from "@modules/users/user.model";
-import { auth } from "@shared/utils/auth";
+import { User } from "@modules/auth/models/user.model";
+import { Account } from "@modules/auth/models/account.model";
+import { hashPassword } from "@shared/utils/auth";
+import mongoose from "mongoose";
 
 async function createAdmin() {
   try {
@@ -14,28 +16,31 @@ async function createAdmin() {
       throw new Error("ADMIN_EMAIL or ADMIN_PASSWORD missing in .env");
     }
 
-    // check if admin already exists
-    const existing = await User.findOne({
-      email,
-    });
-
     console.log("Checking if admin user already exists...");
+    const existing = await User.findOne({ email });
 
     if (existing) {
       console.log("Admin already exists");
       process.exit(0);
     }
 
-    const result = await auth.api.signUpEmail({
-      body: {
-        email,
-        password,
-        name,
-        role: "admin",
-      },
+    const userId = new mongoose.Types.ObjectId();
+    const hashedPassword = await hashPassword(password);
+
+    await User.create({
+      _id: userId,
+      email,
+      name,
+      role: "admin",
+      emailVerified: true
     });
 
-    console.log("Admin user created successfully", result);
+    await Account.create({
+      userId,
+      accountId: "admin",
+      providerId: "credential",
+      password: hashedPassword
+    });
 
     console.log("Admin user created successfully");
     console.log("Email:", email);

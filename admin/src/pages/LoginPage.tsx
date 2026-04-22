@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { signInEmail, signOut, useSession } from "@/lib/auth"
+import { signInEmail, signInAdminEmail, signOut, useSession } from "@/lib/auth"
 import {
   Card,
   CardContent,
@@ -44,7 +44,8 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
     setLoading(true)
 
     try {
-      const response = await signInEmail({ email, password, rememberMe: true })
+      const loginFn = mode === "admin" ? signInAdminEmail : signInEmail
+      const response = await loginFn({ email, password, rememberMe: true })
       console.log("check resp : ", response)
       if (response?.error) {
         setError(response.error.message ?? "Login failed.")
@@ -136,7 +137,10 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               Got a reset link from email?{" "}
-              <Link to="/reset-password" className="font-medium text-primary hover:underline">
+              <Link
+                to="/reset-password"
+                className="font-medium text-primary hover:underline"
+              >
                 set your password
               </Link>
             </p>

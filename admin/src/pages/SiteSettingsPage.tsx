@@ -1,91 +1,110 @@
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Globe, ImagePlus, Loader2, Palette, Save, Search, Share2 } from 'lucide-react';
+import { useEffect, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  Globe,
+  ImagePlus,
+  Loader2,
+  Palette,
+  Save,
+  Search,
+  Share2,
+} from "lucide-react"
 
-import { MediaAssetPicker } from '@/components/media-asset-picker';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { getSiteSettings, updateSiteSettings, type SiteSettings } from '@/lib/api';
+import { MediaAssetPicker } from "@/components/media-asset-picker"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  getSiteSettings,
+  updateSiteSettings,
+  type SiteSettings,
+} from "@/lib/api"
 
 const defaultSettings: SiteSettings = {
-  siteName: '',
-  domain: '',
+  siteName: "",
+  domain: "",
   logo: {
-    url: '',
-    alt: ''
+    url: "",
+    alt: "",
   },
-  favicon: '',
+  favicon: "",
   business: {
-    email: '',
-    phone: '',
-    address: ''
+    email: "",
+    phone: "",
+    address: "",
   },
   social: {
-    facebook: '',
-    instagram: '',
-    linkedin: '',
-    twitter: ''
+    facebook: "",
+    instagram: "",
+    linkedin: "",
+    twitter: "",
   },
   seo: {
-    defaultTitle: '',
-    defaultDescription: '',
-    ogImage: ''
+    defaultTitle: "",
+    defaultDescription: "",
+    ogImage: "",
   },
   theme: {
-    primaryColor: '',
-    secondaryColor: '',
-    fontFamily: ''
-  }
-};
+    primaryColor: "",
+    secondaryColor: "",
+    fontFamily: "",
+  },
+}
 
 export function SiteSettingsPage() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const settingsQuery = useQuery({
-    queryKey: ['content', 'site-settings'],
-    queryFn: getSiteSettings
-  });
+    queryKey: ["content", "site-settings"],
+    queryFn: getSiteSettings,
+  })
 
-  const [form, setForm] = useState<SiteSettings>(defaultSettings);
+  const [form, setForm] = useState<SiteSettings>(defaultSettings)
 
   useEffect(() => {
     if (settingsQuery.data) {
-      const data = settingsQuery.data as SiteSettings;
+      const data = settingsQuery.data as SiteSettings
       setForm({
         ...defaultSettings,
         ...data,
         logo: {
           ...defaultSettings.logo,
-          ...data.logo
+          ...data.logo,
         },
         business: {
           ...defaultSettings.business,
-          ...data.business
+          ...data.business,
         },
         social: {
           ...defaultSettings.social,
-          ...data.social
+          ...data.social,
         },
         seo: {
           ...defaultSettings.seo,
-          ...data.seo
+          ...data.seo,
         },
         theme: {
           ...defaultSettings.theme,
-          ...data.theme
-        }
-      });
+          ...data.theme,
+        },
+      })
     }
-  }, [settingsQuery.data]);
+  }, [settingsQuery.data])
 
   const saveMutation = useMutation({
     mutationFn: updateSiteSettings,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content', 'site-settings'] });
-    }
-  });
+      queryClient.invalidateQueries({ queryKey: ["content", "site-settings"] })
+    },
+  })
 
   return (
     <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
@@ -94,7 +113,8 @@ export function SiteSettingsPage() {
           <Globe className="h-6 w-6 text-primary" /> Global Site Settings
         </CardTitle>
         <CardDescription>
-          Configure the website-wide identity, business details, SEO defaults, and brand styling used across every page.
+          Configure the website-wide identity, business details, SEO defaults,
+          and brand styling used across every page.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -102,8 +122,8 @@ export function SiteSettingsPage() {
           id="site-settings-form"
           className="space-y-8"
           onSubmit={(event) => {
-            event.preventDefault();
-            saveMutation.mutate(form);
+            event.preventDefault()
+            saveMutation.mutate(form)
           }}
         >
           <section className="space-y-4">
@@ -116,7 +136,12 @@ export function SiteSettingsPage() {
                 <Input
                   id="siteName"
                   value={form.siteName}
-                  onChange={(event) => setForm((prev) => ({ ...prev, siteName: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      siteName: event.target.value,
+                    }))
+                  }
                   placeholder="Acme Studio"
                 />
               </div>
@@ -124,26 +149,36 @@ export function SiteSettingsPage() {
                 <Label htmlFor="domain">Domain</Label>
                 <Input
                   id="domain"
-                  value={form.domain ?? ''}
-                  onChange={(event) => setForm((prev) => ({ ...prev, domain: event.target.value }))}
+                  value={form.domain ?? ""}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, domain: event.target.value }))
+                  }
                   placeholder="www.acme.com"
                 />
               </div>
               <MediaAssetPicker
                 label="Logo"
-                value={form.logo?.url ?? ''}
-                onChange={(url) => setForm((prev) => ({ ...prev, logo: { ...(prev.logo ?? { alt: '' }), url } }))}
+                value={form.logo?.url ?? ""}
+                onChange={(url) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    logo: { ...(prev.logo ?? { alt: "" }), url },
+                  }))
+                }
                 helperText="Use your primary brand mark for the header and footer."
               />
               <div className="space-y-2">
                 <Label htmlFor="logoAlt">Logo Alt Text</Label>
                 <Input
                   id="logoAlt"
-                  value={form.logo?.alt ?? ''}
+                  value={form.logo?.alt ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      logo: { ...(prev.logo ?? { url: '' }), alt: event.target.value }
+                      logo: {
+                        ...(prev.logo ?? { url: "" }),
+                        alt: event.target.value,
+                      },
                     }))
                   }
                   placeholder="Acme Studio logo"
@@ -151,8 +186,10 @@ export function SiteSettingsPage() {
               </div>
               <MediaAssetPicker
                 label="Favicon"
-                value={form.favicon ?? ''}
-                onChange={(url) => setForm((prev) => ({ ...prev, favicon: url }))}
+                value={form.favicon ?? ""}
+                onChange={(url) =>
+                  setForm((prev) => ({ ...prev, favicon: url }))
+                }
                 helperText="Small browser icon used in tabs and bookmarks."
               />
             </div>
@@ -168,11 +205,11 @@ export function SiteSettingsPage() {
                 <Input
                   id="businessEmail"
                   type="email"
-                  value={form.business.email ?? ''}
+                  value={form.business.email ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      business: { ...prev.business, email: event.target.value }
+                      business: { ...prev.business, email: event.target.value },
                     }))
                   }
                   placeholder="hello@acme.com"
@@ -182,11 +219,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="businessPhone">Phone</Label>
                 <Input
                   id="businessPhone"
-                  value={form.business.phone ?? ''}
+                  value={form.business.phone ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      business: { ...prev.business, phone: event.target.value }
+                      business: { ...prev.business, phone: event.target.value },
                     }))
                   }
                   placeholder="+1 555-0123"
@@ -197,11 +234,14 @@ export function SiteSettingsPage() {
                 <Textarea
                   id="businessAddress"
                   rows={3}
-                  value={form.business.address ?? ''}
+                  value={form.business.address ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      business: { ...prev.business, address: event.target.value }
+                      business: {
+                        ...prev.business,
+                        address: event.target.value,
+                      },
                     }))
                   }
                   placeholder="123 Main Street, City, Country"
@@ -211,11 +251,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="facebook">Facebook</Label>
                 <Input
                   id="facebook"
-                  value={form.social.facebook ?? ''}
+                  value={form.social.facebook ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      social: { ...prev.social, facebook: event.target.value }
+                      social: { ...prev.social, facebook: event.target.value },
                     }))
                   }
                   placeholder="https://facebook.com/your-page"
@@ -225,11 +265,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="instagram">Instagram</Label>
                 <Input
                   id="instagram"
-                  value={form.social.instagram ?? ''}
+                  value={form.social.instagram ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      social: { ...prev.social, instagram: event.target.value }
+                      social: { ...prev.social, instagram: event.target.value },
                     }))
                   }
                   placeholder="https://instagram.com/your-handle"
@@ -239,11 +279,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="linkedin">LinkedIn</Label>
                 <Input
                   id="linkedin"
-                  value={form.social.linkedin ?? ''}
+                  value={form.social.linkedin ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      social: { ...prev.social, linkedin: event.target.value }
+                      social: { ...prev.social, linkedin: event.target.value },
                     }))
                   }
                   placeholder="https://linkedin.com/company/your-brand"
@@ -253,11 +293,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="twitter">Twitter / X</Label>
                 <Input
                   id="twitter"
-                  value={form.social.twitter ?? ''}
+                  value={form.social.twitter ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      social: { ...prev.social, twitter: event.target.value }
+                      social: { ...prev.social, twitter: event.target.value },
                     }))
                   }
                   placeholder="https://x.com/your-handle"
@@ -275,11 +315,11 @@ export function SiteSettingsPage() {
                 <Label htmlFor="defaultTitle">Default Title</Label>
                 <Input
                   id="defaultTitle"
-                  value={form.seo.defaultTitle ?? ''}
+                  value={form.seo.defaultTitle ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      seo: { ...prev.seo, defaultTitle: event.target.value }
+                      seo: { ...prev.seo, defaultTitle: event.target.value },
                     }))
                   }
                   placeholder="Acme Studio"
@@ -287,11 +327,11 @@ export function SiteSettingsPage() {
               </div>
               <MediaAssetPicker
                 label="Open Graph Image"
-                value={form.seo.ogImage ?? ''}
+                value={form.seo.ogImage ?? ""}
                 onChange={(url) =>
                   setForm((prev) => ({
                     ...prev,
-                    seo: { ...prev.seo, ogImage: url }
+                    seo: { ...prev.seo, ogImage: url },
                   }))
                 }
                 helperText="Used when your site is shared on social platforms."
@@ -301,11 +341,14 @@ export function SiteSettingsPage() {
                 <Textarea
                   id="defaultDescription"
                   rows={4}
-                  value={form.seo.defaultDescription ?? ''}
+                  value={form.seo.defaultDescription ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      seo: { ...prev.seo, defaultDescription: event.target.value }
+                      seo: {
+                        ...prev.seo,
+                        defaultDescription: event.target.value,
+                      },
                     }))
                   }
                   placeholder="Describe the business and what visitors should expect."
@@ -323,11 +366,14 @@ export function SiteSettingsPage() {
                 <Label htmlFor="primaryColor">Primary Color</Label>
                 <Input
                   id="primaryColor"
-                  value={form.theme?.primaryColor ?? ''}
+                  value={form.theme?.primaryColor ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      theme: { ...(prev.theme ?? {}), primaryColor: event.target.value }
+                      theme: {
+                        ...(prev.theme ?? {}),
+                        primaryColor: event.target.value,
+                      },
                     }))
                   }
                   placeholder="#0f172a"
@@ -337,11 +383,14 @@ export function SiteSettingsPage() {
                 <Label htmlFor="secondaryColor">Secondary Color</Label>
                 <Input
                   id="secondaryColor"
-                  value={form.theme?.secondaryColor ?? ''}
+                  value={form.theme?.secondaryColor ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      theme: { ...(prev.theme ?? {}), secondaryColor: event.target.value }
+                      theme: {
+                        ...(prev.theme ?? {}),
+                        secondaryColor: event.target.value,
+                      },
                     }))
                   }
                   placeholder="#f97316"
@@ -351,11 +400,14 @@ export function SiteSettingsPage() {
                 <Label htmlFor="fontFamily">Font Family</Label>
                 <Input
                   id="fontFamily"
-                  value={form.theme?.fontFamily ?? ''}
+                  value={form.theme?.fontFamily ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
-                      theme: { ...(prev.theme ?? {}), fontFamily: event.target.value }
+                      theme: {
+                        ...(prev.theme ?? {}),
+                        fontFamily: event.target.value,
+                      },
                     }))
                   }
                   placeholder="Georgia, serif"
@@ -366,11 +418,19 @@ export function SiteSettingsPage() {
         </form>
       </CardContent>
       <CardFooter className="flex justify-end border-t bg-muted/50 py-4">
-        <Button form="site-settings-form" type="submit" disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        <Button
+          form="site-settings-form"
+          type="submit"
+          disabled={saveMutation.isPending}
+        >
+          {saveMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Save Site Settings
         </Button>
       </CardFooter>
     </Card>
-  );
+  )
 }

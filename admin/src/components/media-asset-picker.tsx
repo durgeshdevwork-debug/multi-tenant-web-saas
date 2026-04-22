@@ -1,52 +1,64 @@
-import { useId, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
-import { listMediaAssets, uploadMediaAsset, type MediaAsset } from '@/lib/api';
-import { Image, Upload, X } from 'lucide-react';
+import { useId, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
+import { listMediaAssets, uploadMediaAsset, type MediaAsset } from "@/lib/api"
+import { Image, Upload, X } from "lucide-react"
 
 type MediaAssetPickerProps = {
-  label: string;
-  value?: string;
-  onChange: (url: string) => void;
-  helperText?: string;
-  className?: string;
-};
+  label: string
+  value?: string
+  onChange: (url: string) => void
+  helperText?: string
+  className?: string
+}
 
-export function MediaAssetPicker({ label, value, onChange, helperText, className }: MediaAssetPickerProps) {
-  const [open, setOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [altText, setAltText] = useState('');
-  const queryClient = useQueryClient();
-  const reactId = useId();
-  const uploadId = `media-upload-${reactId}`;
-  const altId = `media-alt-${reactId}`;
+export function MediaAssetPicker({
+  label,
+  value,
+  onChange,
+  helperText,
+  className,
+}: MediaAssetPickerProps) {
+  const [open, setOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [altText, setAltText] = useState("")
+  const queryClient = useQueryClient()
+  const reactId = useId()
+  const uploadId = `media-upload-${reactId}`
+  const altId = `media-alt-${reactId}`
 
   const mediaQuery = useQuery({
-    queryKey: ['media-assets'],
-    queryFn: listMediaAssets
-  });
+    queryKey: ["media-assets"],
+    queryFn: listMediaAssets,
+  })
 
   const uploadMutation = useMutation({
     mutationFn: uploadMediaAsset,
     onSuccess: (asset) => {
-      queryClient.invalidateQueries({ queryKey: ['media-assets'] });
-      onChange(asset.url);
-      setSelectedFile(null);
-      setAltText('');
-      setOpen(false);
-    }
-  });
+      queryClient.invalidateQueries({ queryKey: ["media-assets"] })
+      onChange(asset.url)
+      setSelectedFile(null)
+      setAltText("")
+      setOpen(false)
+    },
+  })
 
-  const mediaAssets = (mediaQuery.data as MediaAsset[] | undefined) ?? [];
+  const mediaAssets = (mediaQuery.data as MediaAsset[] | undefined) ?? []
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn("space-y-3", className)}>
       <Label>{label}</Label>
       <div className="space-y-3 rounded-xl border bg-background/70 p-3">
         {value ? (
@@ -78,27 +90,39 @@ export function MediaAssetPicker({ label, value, onChange, helperText, className
                   <TabsTrigger value="upload">Upload new</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="library" className="mt-4 max-h-[60vh] overflow-y-auto">
+                <TabsContent
+                  value="library"
+                  className="mt-4 max-h-[60vh] overflow-y-auto"
+                >
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {mediaAssets.map((asset) => (
                       <button
                         key={asset._id}
                         type="button"
                         onClick={() => {
-                          onChange(asset.url);
-                          setOpen(false);
+                          onChange(asset.url)
+                          setOpen(false)
                         }}
                         className={cn(
-                          'group overflow-hidden rounded-xl border text-left transition-all hover:border-primary/60',
-                          value === asset.url && 'border-primary ring-1 ring-primary'
+                          "group overflow-hidden rounded-xl border text-left transition-all hover:border-primary/60",
+                          value === asset.url &&
+                            "border-primary ring-1 ring-primary"
                         )}
                       >
                         <div className="aspect-square bg-muted/20">
-                          <img src={asset.url} alt={asset.altText ?? asset.originalName} className="h-full w-full object-cover" />
+                          <img
+                            src={asset.url}
+                            alt={asset.altText ?? asset.originalName}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
                         <div className="space-y-1 p-3">
-                          <p className="truncate text-sm font-medium">{asset.originalName}</p>
-                          <p className="truncate text-xs text-muted-foreground">{asset.url}</p>
+                          <p className="truncate text-sm font-medium">
+                            {asset.originalName}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {asset.url}
+                          </p>
                         </div>
                       </button>
                     ))}
@@ -119,7 +143,9 @@ export function MediaAssetPicker({ label, value, onChange, helperText, className
                           id={uploadId}
                           type="file"
                           accept="image/*"
-                          onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                          onChange={(event) =>
+                            setSelectedFile(event.target.files?.[0] ?? null)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -142,13 +168,18 @@ export function MediaAssetPicker({ label, value, onChange, helperText, className
                       <Button
                         type="button"
                         onClick={() => {
-                          if (!selectedFile) return;
-                          uploadMutation.mutate({ file: selectedFile, altText: altText || undefined });
+                          if (!selectedFile) return
+                          uploadMutation.mutate({
+                            file: selectedFile,
+                            altText: altText || undefined,
+                          })
                         }}
                         disabled={!selectedFile || uploadMutation.isPending}
                       >
                         <Upload className="mr-2 h-4 w-4" />
-                        {uploadMutation.isPending ? 'Uploading...' : 'Upload and use'}
+                        {uploadMutation.isPending
+                          ? "Uploading..."
+                          : "Upload and use"}
                       </Button>
                     </CardContent>
                   </Card>
@@ -162,9 +193,9 @@ export function MediaAssetPicker({ label, value, onChange, helperText, className
             variant="outline"
             className="justify-start"
             onClick={() => {
-              setSelectedFile(null);
-              setAltText('');
-              onChange('');
+              setSelectedFile(null)
+              setAltText("")
+              onChange("")
             }}
           >
             <X className="mr-2 h-4 w-4" />
@@ -172,8 +203,10 @@ export function MediaAssetPicker({ label, value, onChange, helperText, className
           </Button>
         </div>
 
-        {helperText ? <p className="text-xs text-muted-foreground">{helperText}</p> : null}
+        {helperText ? (
+          <p className="text-xs text-muted-foreground">{helperText}</p>
+        ) : null}
       </div>
     </div>
-  );
+  )
 }

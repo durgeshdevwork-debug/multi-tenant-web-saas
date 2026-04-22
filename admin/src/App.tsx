@@ -1,8 +1,8 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Router } from './router';
+import { Router } from "./router"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 export function App() {
   return (

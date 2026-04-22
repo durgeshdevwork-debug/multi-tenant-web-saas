@@ -1,14 +1,14 @@
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
-import { DoorOpen, ShieldCheck } from 'lucide-react';
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+import { DoorOpen, ShieldCheck } from "lucide-react"
 
 type SiteHeaderProps = {
-  title: string;
-  roleLabel: string;
-  onSignOut: () => void;
-};
+  title: string
+  roleLabel: string
+  onSignOut: () => void
+}
 
 export function SiteHeader({ title, roleLabel, onSignOut }: SiteHeaderProps) {
   return (
@@ -19,10 +19,12 @@ export function SiteHeader({ title, roleLabel, onSignOut }: SiteHeaderProps) {
           <Separator orientation="vertical" className="hidden h-6 md:block" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-lg font-semibold tracking-tight md:text-xl">{title}</h1>
+              <h1 className="truncate text-lg font-semibold tracking-tight md:text-xl">
+                {title}
+              </h1>
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground'
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase"
                 )}
               >
                 <ShieldCheck className="size-3.5" />
@@ -45,5 +47,5 @@ export function SiteHeader({ title, roleLabel, onSignOut }: SiteHeaderProps) {
         </Button>
       </div>
     </header>
-  );
+  )
 }

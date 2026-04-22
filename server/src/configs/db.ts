@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { logger } from "./logger";
 import { env } from "./env";
-import { MongoClient } from "mongodb";
+
 
 // DB connection functions for app models
 export async function connectDB() {
@@ -19,9 +19,3 @@ export async function disconnectDB() {
   logger.info("MongoDB disconnected");
 }
 
-// Better Auth MongoDB adapter setup
-
-const client = new MongoClient(env.DATABASE_URL);
-const db = client.db();
-
-export { client, db };

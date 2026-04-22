@@ -12,9 +12,6 @@ const envSchema = z.object({
   API_BASE_URL: z.string(),
   ADMIN_BASE_URL: z.string(),
 
-  // Better Auth
-  BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET is required'),
-  BETTER_AUTH_BASE_URL: z.string().url().optional(), // e.g. http://localhost:4000
 
   // Mail / Brevo SMTP
   BREVO_SMTP_HOST: z.string().default('smtp-relay.brevo.com'),

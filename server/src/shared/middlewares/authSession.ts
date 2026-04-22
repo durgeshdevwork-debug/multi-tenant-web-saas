@@ -1,12 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
-import { fromNodeHeaders } from 'better-auth/node';
-import { auth } from '../utils/auth';
+import { verifyToken } from '../utils/auth';
 import { sendError } from '@shared/utils/response';
+import { User } from '@modules/auth/models/user.model';
+import { Session } from '@modules/auth/models/session.model';
 
 export interface AuthenticatedRequest extends Request {
   authUser?: {
     id: string;
     email: string;
+    role: string;
+    tenantId?: string;
   };
   authSession?: unknown;
 }
@@ -17,22 +20,38 @@ export async function authSession(
   next: NextFunction
 ) {
   try {
-    const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers)
-    }); // pattern from Better Auth Express docs[web:17][web:20][web:35]
-
-    if (!session) {
+    const token = req.cookies?.jwt || req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
       return sendError(res, 'Not authenticated', 401);
     }
 
+    const payload = verifyToken(token) as any;
+    
+    if (!payload || !payload.id) {
+       return sendError(res, 'Not authenticated', 401);
+    }
+
+    const session = await Session.findOne({ token, userId: payload.id });
+    if (!session || session.expiresAt < new Date()) {
+      return sendError(res, 'Session expired or not found', 401);
+    }
+
+    const user = await User.findById(payload.id);
+    if (!user) {
+      return sendError(res, 'User not found', 401);
+    }
+
     req.authUser = {
-      id: session.user.id,
-      email: session.user.email
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId
     };
-    req.authSession = session.session;
+    req.authSession = session;
     return next();
   } catch (err) {
-    return next(err);
+    return sendError(res, 'Not authenticated', 401);
   }
 }
 

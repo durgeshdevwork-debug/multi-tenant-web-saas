@@ -1,2 +1,1 @@
-export type DashboardRole = 'admin' | 'user';
-
+export type DashboardRole = "admin" | "user"

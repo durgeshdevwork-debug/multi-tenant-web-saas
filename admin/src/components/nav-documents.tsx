@@ -18,7 +18,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { DotsThreeOutlineIcon, FolderIcon, ShareIcon, TrashIcon } from "@phosphor-icons/react"
+import {
+  DotsThreeOutlineIcon,
+  FolderIcon,
+  ShareIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 
 export function NavDocuments({
   items,
@@ -43,7 +48,8 @@ export function NavDocuments({
                 className={({ isActive }) =>
                   cn(
                     "flex w-full items-center gap-2 rounded-none",
-                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                    isActive &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground"
                   )
                 }
               >
@@ -57,8 +63,7 @@ export function NavDocuments({
                   showOnHover
                   className="rounded-sm data-[state=open]:bg-accent"
                 >
-                  <DotsThreeOutlineIcon
-                  />
+                  <DotsThreeOutlineIcon />
                   <span className="sr-only">More</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
@@ -68,19 +73,16 @@ export function NavDocuments({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <FolderIcon
-                  />
+                  <FolderIcon />
                   <span>Open</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <ShareIcon
-                  />
+                  <ShareIcon />
                   <span>Share</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
-                  <TrashIcon
-                  />
+                  <TrashIcon />
                   <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

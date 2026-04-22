@@ -1,24 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { auth } from '../utils/auth';
-import { fromNodeHeaders } from 'better-auth/node';
-
-type SessionUser = {
-  id: string;
-  email: string;
-  name?: string;
-  image?: string | null;
-  role?: string;
-  tenantId?: string;
-};
+import { authSession, AuthenticatedRequest } from './authSession';
 
 export const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers)
-    });
-    const user = session?.user as SessionUser | undefined;
+  authSession(req as AuthenticatedRequest, res, () => {
+    const user = (req as AuthenticatedRequest).authUser;
 
-    if (!session || user?.role !== 'admin') {
+    if (!user || user.role !== 'admin') {
       res.status(403).json({
         success: false,
         message: 'Forbidden: Admin access required',
@@ -28,32 +15,16 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // Attach user to request for convenience
     (req as any).user = user;
     next();
-  } catch (err) {
-    next(err);
-  }
+  });
 };
 
 export const requireTenantUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers)
-    });
-    const user = session?.user as SessionUser | undefined;
+  authSession(req as AuthenticatedRequest, res, () => {
+    const user: any = (req as AuthenticatedRequest).authUser;
 
-    if (!session) {
-      res.status(401).json({
-        success: false,
-        message: 'Unauthorized',
-        statusCode: 401,
-        errors: []
-    });
-    return;
-    }
-
-    // Only allow users that have a tenantId or admins
+    // We can allow users that have a tenantId or admins
     if (user?.role !== 'admin' && !user?.tenantId) {
       res.status(403).json({
         success: false,
@@ -66,7 +37,5 @@ export const requireTenantUser = async (req: Request, res: Response, next: NextF
 
     (req as any).user = user;
     next();
-  } catch (err) {
-    next(err);
-  }
+  });
 };

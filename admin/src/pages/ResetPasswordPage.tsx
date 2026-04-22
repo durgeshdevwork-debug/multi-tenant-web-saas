@@ -118,7 +118,10 @@ export function ResetPasswordPage() {
             </div>
 
             {error ? (
-              <Alert variant="destructive" className="border-red-500/30 bg-red-500/10 text-red-100">
+              <Alert
+                variant="destructive"
+                className="border-red-500/30 bg-red-500/10 text-red-100"
+              >
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : null}
@@ -145,7 +148,10 @@ export function ResetPasswordPage() {
 
           <p className="text-center text-sm text-slate-400">
             Back to{" "}
-            <Link to="/login" className="font-medium text-blue-300 hover:text-blue-200">
+            <Link
+              to="/login"
+              className="font-medium text-blue-300 hover:text-blue-200"
+            >
               login
             </Link>
           </p>

@@ -34,7 +34,8 @@ export function NavSecondary({
                   className={({ isActive }) =>
                     cn(
                       "flex w-full items-center gap-2 rounded-none",
-                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                      isActive &&
+                        "bg-sidebar-accent text-sidebar-accent-foreground"
                     )
                   }
                 >
