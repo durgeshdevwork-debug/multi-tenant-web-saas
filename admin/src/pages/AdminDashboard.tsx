@@ -847,35 +847,53 @@ export function AdminDashboard() {
                 </Button>
               </form>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {(templatesQuery.data as Template[] | undefined)?.map(
                   (template) => (
                     <Card
                       key={template._id}
-                      className="overflow-hidden transition-shadow hover:shadow-md"
+                      className="group overflow-hidden border-none bg-background/50 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-primary/20 backdrop-blur-sm"
                     >
-                      <CardHeader className="bg-muted/30 pb-4">
-                        <CardTitle className="text-lg">
+                      <CardHeader className="relative space-y-1 bg-gradient-to-br from-primary/10 via-background to-background pb-6">
+                        <div className="absolute top-4 right-4 rounded-full bg-primary/10 p-2 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <CardTitle className="text-xl font-bold">
                           {template.name}
                         </CardTitle>
-                        <CardDescription className="font-mono text-xs">
+                        <CardDescription className="flex items-center gap-1 font-mono text-xs uppercase tracking-wider text-primary/70">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                           {template.identifier}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-4">
-                        <h4 className="mb-3 text-xs font-semibold text-muted-foreground uppercase">
-                          Included Modules
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {template.modules?.map((module) => (
-                            <Badge
-                              key={module}
-                              variant="secondary"
-                              className="font-normal capitalize shadow-sm"
-                            >
-                              {module}
-                            </Badge>
-                          ))}
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="mb-3 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                              Core Modules
+                            </h4>
+                            <div className="flex flex-wrap gap-1.5">
+                              {template.modules?.map((module) => (
+                                <Badge
+                                  key={module}
+                                  variant="secondary"
+                                  className="rounded-md border-none bg-muted/50 px-2 py-0.5 text-[11px] font-medium capitalize"
+                                >
+                                  {module}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-between text-xs font-semibold hover:bg-primary/5 hover:text-primary"
+                            asChild
+                          >
+                            <Link to="/admin/onboard">
+                              Use this template
+                              <Plus className="h-3.3 w-3.5" />
+                            </Link>
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useParams } from "react-router-dom"
-import { FilePlus2, Loader2, Plus, Save, Trash2 } from "lucide-react"
+import {
+  ExternalLink,
+  FilePlus2,
+  Files,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react"
+import { MediaAssetPicker } from "@/components/media-asset-picker"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -121,14 +130,14 @@ function SectionItemsEditor({
               })
             }}
           />
-          <Input
-            placeholder="Image URL"
+          <MediaAssetPicker
+            label="Image"
             value={item.imageUrl ?? ""}
-            onChange={(event) => {
+            onChange={(url) => {
               const nextItems = [...items]
               nextItems[index] = {
                 ...nextItems[index],
-                imageUrl: event.target.value,
+                imageUrl: url,
               }
               onChange({
                 ...section,
@@ -334,16 +343,15 @@ function PageSectionEditor({
         </div>
         {supportsImage ? (
           <div className="space-y-2 md:col-span-2">
-            <Label>Image URL</Label>
-            <Input
+            <MediaAssetPicker
+              label="Section Image"
               value={section.content.imageUrl ?? ""}
-              onChange={(event) =>
+              onChange={(url) =>
                 onChange({
                   ...section,
-                  content: { ...section.content, imageUrl: event.target.value },
+                  content: { ...section.content, imageUrl: url },
                 })
               }
-              placeholder="https://example.com/image.jpg"
             />
           </div>
         ) : null}
@@ -412,6 +420,9 @@ export function PagesWorkspacePage() {
   })
 
   const [form, setForm] = useState<Page>(emptyPage())
+  const [quickTitle, setQuickTitle] = useState("")
+  const [quickSlug, setQuickSlug] = useState("")
+  const [quickParentId, setQuickParentId] = useState("root")
 
   useEffect(() => {
     if (pageId === "new") {
@@ -470,6 +481,14 @@ export function PagesWorkspacePage() {
     [pageId, pagesQuery.data]
   )
 
+  const children = useMemo(
+    () =>
+      ((pagesQuery.data as Page[] | undefined) ?? []).filter(
+        (page) => page.parentId === pageId
+      ),
+    [pageId, pagesQuery.data]
+  )
+
   const isCreateMode = pageId === "new"
   const isOverview = !pageId
 
@@ -477,23 +496,85 @@ export function PagesWorkspacePage() {
     const pages = (pagesQuery.data as Page[] | undefined) ?? []
 
     return (
-      <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <FilePlus2 className="h-6 w-6 text-primary" /> Pages Workspace
-          </CardTitle>
-          <CardDescription>
-            Create new pages, organize nested structures, and open a page from
-            the sidebar to edit its content blocks.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Button onClick={() => navigate("/pages/new")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create New Page
-          </Button>
+      <div className="space-y-6">
+        <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <FilePlus2 className="h-6 w-6 text-primary" /> Pages Workspace
+            </CardTitle>
+            <CardDescription>
+              Create new pages, organize nested structures, and open a page from
+              the sidebar to edit its content blocks.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="rounded-xl border bg-background/50 p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold">Quick Create Page</h3>
+              <form
+                className="grid gap-4 md:grid-cols-4"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  createMutation.mutate({
+                    ...emptyPage(),
+                    title: quickTitle,
+                    slug: quickSlug || quickTitle.toLowerCase().replace(/\s+/g, "-"),
+                    parentId: quickParentId === "root" ? null : quickParentId,
+                  })
+                }}
+              >
+                <div className="space-y-2 md:col-span-1">
+                  <Label htmlFor="quick-title">Page Title</Label>
+                  <Input
+                    id="quick-title"
+                    value={quickTitle}
+                    onChange={(e) => setQuickTitle(e.target.value)}
+                    placeholder="e.g. Our Services"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-1">
+                  <Label htmlFor="quick-slug">Slug (Optional)</Label>
+                  <Input
+                    id="quick-slug"
+                    value={quickSlug}
+                    onChange={(e) => setQuickSlug(e.target.value)}
+                    placeholder="e.g. services"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-1">
+                  <Label htmlFor="quick-parent">Parent Page</Label>
+                  <Select value={quickParentId} onValueChange={setQuickParentId}>
+                    <SelectTrigger id="quick-parent">
+                      <SelectValue placeholder="Top-level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="root">Top-level</SelectItem>
+                      {pages.map((p) => (
+                        <SelectItem key={p.id ?? p._id} value={p.id ?? p._id!}>
+                          {p.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    Create Page
+                  </Button>
+                </div>
+              </form>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {pages.map((page) => (
               <div
                 key={page.id ?? page._id}
@@ -524,6 +605,7 @@ export function PagesWorkspacePage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     )
   }
 
@@ -632,18 +714,46 @@ export function PagesWorkspacePage() {
                 }
               />
             </div>
+          </section>
+
+          {children.length > 0 && (
+            <section className="space-y-4 rounded-2xl border bg-muted/5 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-2 border-b pb-3">
+                <Files className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold">Child Pages</h3>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {children.map((child) => (
+                  <button
+                    key={child.id ?? child._id}
+                    type="button"
+                    onClick={() => navigate(`/pages/${child.id ?? child._id}`)}
+                    className="flex items-center justify-between gap-4 rounded-xl border bg-background p-4 text-left transition-all hover:border-primary/50 hover:shadow-md"
+                  >
+                    <div>
+                      <div className="font-semibold">{child.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {child.path}
+                      </div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="og-image">SEO OG Image</Label>
-              <Input
-                id="og-image"
+              <MediaAssetPicker
+                label="SEO OG Image"
                 value={form.seo.ogImage ?? ""}
-                onChange={(event) =>
+                onChange={(url) =>
                   setForm((prev) => ({
                     ...prev,
-                    seo: { ...prev.seo, ogImage: event.target.value },
+                    seo: { ...prev.seo, ogImage: url },
                   }))
                 }
-                placeholder="https://example.com/og-image.jpg"
               />
             </div>
             <div className="space-y-2 md:col-span-2">
@@ -737,6 +847,33 @@ export function PagesWorkspacePage() {
               <Label>Show In Footer Nav</Label>
             </div>
           </section>
+
+          {children.length > 0 && (
+            <section className="space-y-4 rounded-2xl border bg-muted/5 p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-2 border-b pb-3">
+                <Files className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold">Child Pages</h3>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {children.map((child) => (
+                  <button
+                    key={child.id ?? child._id}
+                    type="button"
+                    onClick={() => navigate(`/pages/${child.id ?? child._id}`)}
+                    className="flex items-center justify-between gap-4 rounded-xl border bg-background p-4 text-left transition-all hover:border-primary/50 hover:shadow-md"
+                  >
+                    <div>
+                      <div className="font-semibold">{child.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {child.path}
+                      </div>
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-4 border-b pb-2">

@@ -20,6 +20,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import type { DashboardRole } from "@/lib/roles"
 import {
   ChartBar,
@@ -35,6 +40,7 @@ import {
   PlusSquare,
   SlidersHorizontal,
   Users,
+  CaretDown,
 } from "@phosphor-icons/react"
 import { Link, NavLink } from "react-router-dom"
 import { listPageTree, type Page } from "@/lib/api"
@@ -101,55 +107,106 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   onSignOut: () => void
 }
 
-function PageTreeItem({ page }: { page: Page }) {
+function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) {
   const hasChildren = Boolean(page.children?.length)
+  const [isOpen, setIsOpen] = React.useState(true)
+
+  if (isSub) {
+    return (
+      <SidebarMenuSubItem>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="flex items-center">
+            <SidebarMenuSubButton asChild className="flex-1">
+              <NavLink
+                to={`/pages/${page.id ?? page._id}`}
+                className={({ isActive }) =>
+                  cn(
+                    "flex w-full items-center gap-2 rounded-none",
+                    isActive &&
+                      "bg-sidebar-accent text-sidebar-accent-foreground"
+                  )
+                }
+              >
+                <span>{page.navigationLabel || page.title}</span>
+              </NavLink>
+            </SidebarMenuSubButton>
+            {hasChildren && (
+              <CollapsibleTrigger asChild>
+                <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-sidebar-accent">
+                  <CaretDown
+                    className={cn(
+                      "h-3 w-3 transition-transform duration-200",
+                      isOpen ? "rotate-0" : "-rotate-90"
+                    )}
+                  />
+                </button>
+              </CollapsibleTrigger>
+            )}
+          </div>
+          {hasChildren && (
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {page.children?.map((child) => (
+                  <PageTreeItem
+                    key={child.id ?? child._id}
+                    page={child}
+                    isSub={true}
+                  />
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          )}
+        </Collapsible>
+      </SidebarMenuSubItem>
+    )
+  }
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={page.title}>
-        <NavLink
-          to={`/pages/${page.id ?? page._id}`}
-          className={({ isActive }) =>
-            cn(
-              "flex w-full items-center gap-2 rounded-none",
-              isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-            )
-          }
-        >
-          <FolderOpen />
-          <span>{page.navigationLabel || page.title}</span>
-        </NavLink>
-      </SidebarMenuButton>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <div className="flex items-center">
+          <SidebarMenuButton asChild tooltip={page.title} className="flex-1">
+            <NavLink
+              to={`/pages/${page.id ?? page._id}`}
+              className={({ isActive }) =>
+                cn(
+                  "flex w-full items-center gap-2 rounded-none",
+                  isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                )
+              }
+            >
+              <FolderOpen />
+              <span>{page.navigationLabel || page.title}</span>
+            </NavLink>
+          </SidebarMenuButton>
+          {hasChildren && (
+            <CollapsibleTrigger asChild>
+              <button className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-sidebar-accent">
+                <CaretDown
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    isOpen ? "rotate-0" : "-rotate-90"
+                  )}
+                />
+              </button>
+            </CollapsibleTrigger>
+          )}
+        </div>
 
-      {hasChildren ? (
-        <SidebarMenuSub>
-          {page.children?.map((child) => (
-            <SidebarMenuSubItem key={child.id ?? child._id}>
-              <SidebarMenuSubButton asChild>
-                <NavLink
-                  to={`/pages/${child.id ?? child._id}`}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex w-full items-center gap-2 rounded-none",
-                      isActive &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )
-                  }
-                >
-                  <span>{child.navigationLabel || child.title}</span>
-                </NavLink>
-              </SidebarMenuSubButton>
-              {child.children?.length ? (
-                <SidebarMenuSub>
-                  {child.children.map((nested) => (
-                    <PageTreeItem key={nested.id ?? nested._id} page={nested} />
-                  ))}
-                </SidebarMenuSub>
-              ) : null}
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
-      ) : null}
+        {hasChildren && (
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {page.children?.map((child) => (
+                <PageTreeItem
+                  key={child.id ?? child._id}
+                  page={child}
+                  isSub={true}
+                />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        )}
+      </Collapsible>
     </SidebarMenuItem>
   )
 }

@@ -28,7 +28,7 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    const user = session?.user as SessionUser | undefined
+    const user = session?.user
     if (!isPending && user) {
       if (user.role === "admin") {
         navigate("/admin", { replace: true })
@@ -51,8 +51,8 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
         setError(response.error.message ?? "Login failed.")
         return
       }
-
-      const user = response?.data?.user as SessionUser | undefined
+      const user = response?.data?.user
+      console.log('user : ', user)
       if (!user) {
         setError("Login failed. Please check your credentials.")
         return

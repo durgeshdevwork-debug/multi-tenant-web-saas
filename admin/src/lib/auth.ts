@@ -14,8 +14,8 @@ export const signInEmail = async (payload: {
   rememberMe?: boolean
 }) => {
   try {
-    const res = await apiClient.post("/auth/login", payload)
-    return { data: { user: res.data?.data?.user || res.data?.data } }
+    const res: any = await apiClient.post("/auth/login", payload)
+    return { data: { user: res.data?.user || res.data } }
   } catch (error: any) {
     return { error: { message: error.message || "Login failed" } }
   }
@@ -27,8 +27,8 @@ export const signInAdminEmail = async (payload: {
   rememberMe?: boolean
 }) => {
   try {
-    const res = await apiClient.post("/auth/admin/login", payload)
-    return { data: { user: res.data?.data?.user || res.data?.data } }
+    const res: any = await apiClient.post("/auth/admin/login", payload)
+    return { data: { user: res.data?.user || res.data } }
   } catch (error: any) {
     return { error: { message: error.message || "Login failed" } }
   }
@@ -51,8 +51,8 @@ export function useSession() {
     queryKey: ["session"],
     queryFn: async () => {
       try {
-        const res = await apiClient.get("/auth/profile")
-        return { user: res.data?.data || res.data }
+        const res: any = await apiClient.get("/auth/profile")
+        return { user: res.data?.user || res.data }
       } catch (error) {
         return null
       }
