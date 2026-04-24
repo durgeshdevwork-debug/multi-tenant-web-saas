@@ -27,7 +27,7 @@ export type PublicSectionItem = {
 
 export type PublicSection = {
   id: string;
-  type: 'hero' | 'richText' | 'features' | 'cta' | 'gallery';
+  type: 'hero' | 'richText' | 'features' | 'cta' | 'gallery' | 'collection';
   name?: string;
   content: {
     eyebrow?: string;
@@ -38,6 +38,7 @@ export type PublicSection = {
     buttonUrl?: string;
     items?: PublicSectionItem[];
   };
+  selectedPages?: PublicPage[];
 };
 
 export type PublicPage = {

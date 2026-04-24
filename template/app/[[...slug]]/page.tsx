@@ -22,7 +22,7 @@ export default async function DynamicPage({
         <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">{page.path}</p>
         <h1 className="text-4xl font-semibold text-zinc-950">{page.title}</h1>
       </div>
-      <PageRenderer sections={page.sections} />
+      <PageRenderer sections={page.sections} children={page.children} />
     </div>
   );
 }

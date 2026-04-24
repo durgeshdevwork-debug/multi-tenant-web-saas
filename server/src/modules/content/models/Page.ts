@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type PageSectionType = 'hero' | 'richText' | 'features' | 'cta' | 'gallery';
+export type PageSectionType = 'hero' | 'richText' | 'features' | 'cta' | 'gallery' | 'collection';
 
 export interface IPageSection extends Record<string, any> {
   id: string;
@@ -38,7 +38,7 @@ const pageSectionSchema = new Schema<IPageSection>(
     id: { type: String, required: true },
     type: {
       type: String,
-      enum: ['hero', 'richText', 'features', 'cta', 'gallery'],
+      enum: ['hero', 'richText', 'features', 'cta', 'gallery', 'collection'],
       required: true
     },
     name: String,

@@ -89,6 +89,7 @@ export type PageSectionType =
   | "features"
   | "cta"
   | "gallery"
+  | "collection"
 
 export type PageSectionItem = {
   title?: string
@@ -110,6 +111,8 @@ export type PageSection = {
     buttonLabel?: string
     buttonUrl?: string
     items?: PageSectionItem[]
+    collectionId?: string
+    selectedPageIds?: string[]
   }
   styles?: Record<string, string>
 }

@@ -98,22 +98,42 @@ export class ContentService {
   }
 
   static async updatePage(tenantId: string, id: string, data: Partial<PageInput>) {
-    const updates: Record<string, any> = { ...data };
+    const page = await Page.findOne({ tenantId, _id: id });
+    if (!page) return null;
 
     if (typeof data.slug === 'string' || typeof data.title === 'string') {
-      updates.slug = normalizeSlug(data.slug || data.title || '');
+      page.slug = normalizeSlug(data.slug || data.title || page.title);
     }
 
-    if ('parentId' in data) {
-      updates.parentId = data.isHomePage ? null : toObjectIdValue(data.parentId ?? null);
-    }
+    if (data.title) page.title = data.title;
+    if (data.navigationLabel !== undefined) page.navigationLabel = data.navigationLabel;
+    if (data.showInHeader !== undefined) page.showInHeader = data.showInHeader;
+    if (data.showInFooter !== undefined) page.showInFooter = data.showInFooter;
+    if (data.showHeader !== undefined) page.showHeader = data.showHeader;
+    if (data.showFooter !== undefined) page.showFooter = data.showFooter;
+    if (data.sortOrder !== undefined) page.sortOrder = data.sortOrder;
+    if (data.sections !== undefined) page.sections = data.sections;
+    if (data.seo !== undefined) page.seo = data.seo;
+    if (data.isPublished !== undefined) page.isPublished = data.isPublished;
 
     if (data.isHomePage) {
       await Page.updateMany({ tenantId, isHomePage: true, _id: { $ne: id } }, { $set: { isHomePage: false } });
-      updates.parentId = null;
+      page.isHomePage = true;
+      page.parentId = null;
+    } else if (data.isHomePage === false) {
+      page.isHomePage = false;
     }
 
-    return await Page.findOneAndUpdate({ tenantId, _id: id }, updates, { new: true });
+    if ('parentId' in data && !page.isHomePage) {
+      page.parentId = toObjectIdValue(data.parentId ?? null) as any;
+    }
+
+    // Explicitly mark sections as modified because it contains Mixed type content
+    if (data.sections) {
+      page.markModified('sections');
+    }
+
+    return await page.save();
   }
 
   static async deletePage(tenantId: string, id: string) {
@@ -156,6 +176,53 @@ export class ContentService {
     const pages = await Page.find({ tenantId, isPublished: true }).lean();
     const enriched = enrichPages(pages);
     const normalizedPath = path === '/' ? '/' : `/${path.replace(/^\/+|\/+$/g, '')}`;
-    return enriched.find((page) => page.path === normalizedPath) ?? null;
+    const page = enriched.find((item) => item.path === normalizedPath);
+
+    if (!page) return null;
+
+    // Build a map for fast page lookup
+    const pagesById = new Map(enriched.map((p: any) => [String(p.id), p]));
+
+    // Attach immediate children
+    const children = enriched
+      .filter((item) => String(item.parentId) === String(page.id))
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    // Populate selected pages in sections
+    const processedSections = page.sections.map((section: any) => {
+      const content = section.content || {};
+      
+      if (section.type === 'collection') {
+        const selectedPageIds = content.selectedPageIds || [];
+        
+        let sourcePages = [];
+        if (selectedPageIds.length > 0) {
+          sourcePages = selectedPageIds
+            .map((id: string) => pagesById.get(String(id)))
+            .filter(Boolean);
+        } else {
+          // Auto-mode: Use immediate children
+          sourcePages = children;
+        }
+
+        const dynamicItems = sourcePages.map((p: any) => ({
+          title: p.title,
+          description: p.seo?.metaDescription || (typeof p.sections?.find((s: any) => s.content?.body)?.content?.body === 'string' ? p.sections.find((s: any) => s.content?.body).content.body.substring(0, 160) + '...' : 'Click to learn more.'),
+          imageUrl: p.seo?.ogImage || '',
+          url: p.path
+        }));
+
+        return { 
+          ...section, 
+          content: { 
+            ...content, 
+            items: dynamicItems
+          }
+        };
+      }
+      return section;
+    });
+
+    return { ...page, children, sections: processedSections };
   }
 }

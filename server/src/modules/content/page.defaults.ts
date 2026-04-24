@@ -112,20 +112,16 @@ export const buildInitialPages = (clientName: string, modules: string[] = []): P
       navigationLabel: 'Services',
       sortOrder: 20,
       sections: [
-        createRichTextSection('Services', 'Outline your main offers and describe the value of each service.'),
+        createRichTextSection('Our Services', 'We offer a range of specialized services to help your business grow. Explore our expertise below.'),
         {
-          id: 'services-gallery',
-          type: 'gallery',
-          name: 'Service Grid',
+          id: 'services-collection',
+          type: 'collection',
+          name: 'Automated Service List',
           content: {
-            heading: 'Featured Services',
-            items: [
-              { title: 'Service One', description: 'Describe the first service.', imageUrl: '' },
-              { title: 'Service Two', description: 'Describe the second service.', imageUrl: '' },
-              { title: 'Service Three', description: 'Describe the third service.', imageUrl: '' }
-            ]
+            heading: 'All Services'
           }
-        }
+        },
+        createCtaSection()
       ]
     });
   }
@@ -137,8 +133,15 @@ export const buildInitialPages = (clientName: string, modules: string[] = []): P
       navigationLabel: 'Insights',
       sortOrder: 30,
       sections: [
-        createRichTextSection('Insights', 'Use this page for articles, news, or thought leadership content.'),
-        createCtaSection()
+        createHeroSection('Our Blog'),
+        {
+          id: 'blog-collection',
+          type: 'collection',
+          name: 'Automated Blog List',
+          content: {
+            heading: 'Latest Articles'
+          }
+        }
       ]
     });
   }
