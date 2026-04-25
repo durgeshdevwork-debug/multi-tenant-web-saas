@@ -72,3 +72,51 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+.mobile-menu-dialog::backdrop {
+  background: transparent;
+}
+
+@keyframes mobileMenuIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes mobileMenuOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(24px) scale(0.98);
+  }
+}
+
+@keyframes mobileBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mobileBackdropOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

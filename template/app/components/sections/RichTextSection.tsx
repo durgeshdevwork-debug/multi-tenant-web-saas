@@ -1,4 +1,5 @@
 import type { PublicSection } from '@/app/lib/publicApi';
+import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -19,23 +20,39 @@ export default function RichTextSection({ section }: { section: PublicSection })
   );
 }
 
-function RichTextRenderer({ content }: { content: any }) {
+type RichTextContent = string | Record<string, unknown>;
+
+type LexicalNode = {
+  type?: string;
+  tag?: string;
+  text?: string;
+  url?: string;
+  format?: number;
+  children?: LexicalNode[];
+  root?: LexicalNode;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function RichTextRenderer({ content }: { content: RichTextContent }) {
   if (!content) return null;
 
-  let parsedContent = content;
+  let parsedContent: RichTextContent = content;
 
   // Handle string content that might be JSON
   if (typeof content === 'string' && content.startsWith('{') && content.includes('"root"')) {
     try {
-      parsedContent = JSON.parse(content);
-    } catch (e) {
+      parsedContent = JSON.parse(content) as Record<string, unknown>;
+    } catch {
       // Stay as string (markdown)
     }
   }
 
   // If it's a Lexical JSON object, render it as JSX
-  if (typeof parsedContent === 'object' && parsedContent?.root) {
-    return <LexicalToJsx node={parsedContent.root} />;
+  if (isRecord(parsedContent) && isRecord(parsedContent.root)) {
+    return <LexicalToJsx node={parsedContent.root as LexicalNode} />;
   }
 
   // Fallback to Markdown
@@ -46,24 +63,25 @@ function RichTextRenderer({ content }: { content: any }) {
   );
 }
 
-function LexicalToJsx({ node }: { node: any }) {
+function LexicalToJsx({ node }: { node: LexicalNode }) {
   if (!node) return null;
 
-  const children = node.children?.map((child: any, i: number) => (
-    <LexicalToJsx key={i} node={child} />
-  )) || null;
+  const children =
+    node.children?.map((child, i) => <LexicalToJsx key={i} node={child} />) || null;
 
   switch (node.type) {
     case 'root':
       return <div className="lexical-root">{children}</div>;
     case 'paragraph':
       return <p className="mb-4">{children}</p>;
-    case 'heading':
-      const Tag = (node.tag || 'h3') as any;
+    case 'heading': {
+      const Tag = (node.tag || 'h3') as keyof JSX.IntrinsicElements;
       return <Tag className="mb-4 mt-8 font-bold italic first:mt-0">{children}</Tag>;
-    case 'list':
+    }
+    case 'list': {
       const ListTag = node.tag === 'ol' ? 'ol' : 'ul';
       return <ListTag className="mb-4 ml-6 list-outside list-disc">{children}</ListTag>;
+    }
     case 'listitem':
       return <li className="mb-1">{children}</li>;
     case 'quote':
@@ -73,7 +91,7 @@ function LexicalToJsx({ node }: { node: any }) {
     case 'horizontalrule':
       return <hr className="my-8 border-zinc-200" />;
     case 'text':
-      let text = node.text;
+      let text: ReactNode = node.text;
       if (node.format & 1) text = <strong key="b">{text}</strong>; // Bold
       if (node.format & 2) text = <em key="i">{text}</em>; // Italic
       if (node.format & 4) text = <u key="u">{text}</u>; // Underline
