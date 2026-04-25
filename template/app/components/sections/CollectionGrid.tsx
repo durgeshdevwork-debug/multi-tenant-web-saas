@@ -1,11 +1,10 @@
-import type { PublicSection, PublicPage } from '@/app/lib/publicApi';
+import type { PublicSection } from '@/app/lib/publicApi';
 import PageCard from './PageCard';
 
 export default function CollectionGrid({ 
   section, 
 }: { 
-  section: PublicSection; 
-  children?: PublicPage[] 
+  section: PublicSection;
 }) {
   const items = section.content.items ?? [];
 
