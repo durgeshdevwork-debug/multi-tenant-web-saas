@@ -17,10 +17,10 @@ export default async function DynamicPage({
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-zinc-500">{page.path}</p>
-        <h1 className="text-4xl font-semibold text-zinc-950">{page.title}</h1>
+    <div className="space-y-12">
+      <div className="space-y-3 flex flex-col items-center text-center">
+        <p className="text-sm uppercase tracking-widest text-primary font-medium">{page.path}</p>
+        <h1 className="text-5xl font-semibold tracking-tight text-foreground lg:text-6xl">{page.title}</h1>
       </div>
       <PageRenderer sections={page.sections} children={page.children} />
     </div>

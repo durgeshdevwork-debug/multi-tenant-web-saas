@@ -4,14 +4,14 @@ import remarkGfm from 'remark-gfm';
 
 export default function RichTextSection({ section }: { section: PublicSection }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-6 max-w-4xl mx-auto py-8">
       {section.content.heading ? (
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-950 lg:text-4xl">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground lg:text-4xl text-center">
           {section.content.heading}
         </h2>
       ) : null}
       {section.content.body ? (
-        <div className="prose prose-zinc max-w-none text-base leading-8 text-zinc-600">
+        <div className="prose prose-zinc max-w-none text-base leading-relaxed text-muted-foreground prose-headings:text-foreground prose-a:text-primary">
           <RichTextRenderer content={section.content.body} />
         </div>
       ) : null}

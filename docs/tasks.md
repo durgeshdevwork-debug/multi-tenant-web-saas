@@ -42,3 +42,32 @@ npx shadcn@latest add @shadcn-editor/editor-x
 
 
 - in the editor , i am not able to write entire content and the 
+
+Design and redesign the website template based on the provided reference screenshots. The layout, spacing, and visual hierarchy should closely follow the reference while ensuring full responsiveness across all screen sizes (desktop, tablet, and mobile).
+
+Follow a design system approach instead of applying manual or hardcoded styles:
+
+Use a centralized set of design variables (design tokens) for colors, typography, spacing, and component styles.
+Define and use primary, secondary, and other global theme variables to control the entire design.
+Ensure all components and sections strictly inherit styles from these global variables rather than using custom or inline styling.
+⚙️ Dynamic Content Requirement
+Do not add any static or hardcoded content.
+All data (text, images, sections, etc.) must be fully dynamic and driven by configuration or data sources.
+Components should be designed to render based on passed data (props, JSON, CMS, or API).
+The template must support adding, removing, and reordering sections dynamically without code changes.
+🎯 Goal
+
+Create a reusable, scalable template system where:
+
+The entire website design can be changed by updating global design variables only.
+The same template structure can be reused to generate multiple designs/themes.
+No component-level redesign is required when changing themes or content.
+
+Even though this approach is inspired by shadcn/ui, do not use the library directly—only follow a similar design system philosophy.
+
+✅ Expected Outcome
+Clean, maintainable, and scalable code structure
+Fully responsive design
+Theme-driven UI (via global variables)
+Completely dynamic content rendering
+Easily reusable template architecture for future projects
