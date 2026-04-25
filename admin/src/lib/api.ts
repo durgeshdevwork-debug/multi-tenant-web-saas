@@ -220,32 +220,39 @@ export async function updateSiteSettings(payload: SiteSettings) {
   return unwrap(res)
 }
 
-export async function listPages() {
-  const res = await apiClient.get<ApiEnvelope<Page[]>>("/content/pages")
-  return unwrap(res)
+export async function listPages(): Promise<Page[]> {
+  const res = (await apiClient.get<ApiEnvelope<Page[]>>("/content/pages")) as any
+  return unwrap<Page[]>(res)
 }
 
-export async function listPageTree() {
-  const res = await apiClient.get<ApiEnvelope<Page[]>>("/content/pages/tree")
-  return unwrap(res)
+export async function listPageTree(): Promise<Page[]> {
+  const res = (await apiClient.get<ApiEnvelope<Page[]>>(
+    "/content/pages/tree"
+  )) as any
+  return unwrap<Page[]>(res)
 }
 
-export async function getPage(id: string) {
-  const res = await apiClient.get<ApiEnvelope<Page>>(`/content/pages/${id}`)
-  return unwrap(res)
+export async function getPage(id: string): Promise<Page> {
+  const res = (await apiClient.get<ApiEnvelope<Page>>(
+    `/content/pages/${id}`
+  )) as any
+  return unwrap<Page>(res)
 }
 
-export async function createPage(payload: Page) {
-  const res = await apiClient.post<ApiEnvelope<Page>>("/content/pages", payload)
-  return unwrap(res)
+export async function createPage(payload: Page): Promise<Page> {
+  const res = (await apiClient.post<ApiEnvelope<Page>>(
+    "/content/pages",
+    payload
+  )) as any
+  return unwrap<Page>(res)
 }
 
-export async function updatePage(id: string, payload: Page) {
-  const res = await apiClient.put<ApiEnvelope<Page>>(
+export async function updatePage(id: string, payload: Page): Promise<Page> {
+  const res = (await apiClient.put<ApiEnvelope<Page>>(
     `/content/pages/${id}`,
     payload
-  )
-  return unwrap(res)
+  )) as any
+  return unwrap<Page>(res)
 }
 
 export async function deletePage(id: string) {

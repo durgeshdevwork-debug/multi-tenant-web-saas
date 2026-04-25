@@ -21,3 +21,24 @@ Once a collection is selected, display a list of available pages from that colle
 The user can then select specific pages to include in that section.
 In the frontend template, the selected pages should be rendered within that section, displaying their title, description, image, and slug.
 This will enable dynamic listing of pages (e.g., services) on the parent page.
+
+
+
+
+===================
+
+
+
+- can you change
+- in the adminDashboard ,pageworkspacepage this pages is too long and messy for understanding the code , use component for this pages insted of writing all code into single pages 
+--
+
+    in the admin panel for the rich text section i have to implement rich text editor for applying the rich text editing
+
+npx shadcn@latest add @shadcn-editor/editor-x
+
+
+
+
+
+- in the editor , i am not able to write entire content and the 

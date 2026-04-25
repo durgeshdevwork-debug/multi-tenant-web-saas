@@ -24,14 +24,13 @@ type MediaAssetPickerProps = {
   className?: string
 }
 
-export function MediaAssetPicker({
-  label,
+export function MediaLibrary({
+  onSelect,
   value,
-  onChange,
-  helperText,
-  className,
-}: MediaAssetPickerProps) {
-  const [open, setOpen] = useState(false)
+}: {
+  onSelect: (url: string) => void
+  value?: string
+}) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [altText, setAltText] = useState("")
   const queryClient = useQueryClient()
@@ -48,14 +47,126 @@ export function MediaAssetPicker({
     mutationFn: uploadMediaAsset,
     onSuccess: (asset) => {
       queryClient.invalidateQueries({ queryKey: ["media-assets"] })
-      onChange(asset.url)
+      onSelect(asset.url)
       setSelectedFile(null)
       setAltText("")
-      setOpen(false)
     },
   })
 
   const mediaAssets = (mediaQuery.data as MediaAsset[] | undefined) ?? []
+
+  return (
+    <Tabs defaultValue="library" className="flex h-full flex-col">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="library">Media library</TabsTrigger>
+        <TabsTrigger value="upload">Upload new</TabsTrigger>
+      </TabsList>
+
+      <TabsContent
+        value="library"
+        className="mt-4 max-h-[60vh] overflow-y-auto"
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {mediaAssets.map((asset) => (
+            <button
+              key={asset._id}
+              type="button"
+              onClick={() => {
+                onSelect(asset.url)
+              }}
+              className={cn(
+                "group overflow-hidden rounded-xl border text-left transition-all hover:border-primary/60",
+                value === asset.url &&
+                  "border-primary ring-1 ring-primary"
+              )}
+            >
+              <div className="aspect-square bg-muted/20">
+                <img
+                  src={asset.url}
+                  alt={asset.altText ?? asset.originalName}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="space-y-1 p-3">
+                <p className="truncate text-sm font-medium">
+                  {asset.originalName}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {asset.url}
+                </p>
+              </div>
+            </button>
+          ))}
+          {mediaAssets.length === 0 && (
+            <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+              No media uploaded yet.
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="upload" className="mt-4 space-y-4">
+        <Card className="border-border/70 bg-muted/10">
+          <CardContent className="space-y-4 p-4">
+            <div className="space-y-2">
+              <Label htmlFor={uploadId}>Choose image</Label>
+              <Input
+                id={uploadId}
+                type="file"
+                accept="image/*"
+                onChange={(event) =>
+                  setSelectedFile(event.target.files?.[0] ?? null)
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={altId}>Alt text</Label>
+              <Input
+                id={altId}
+                placeholder="Describe the image"
+                value={altText}
+                onChange={(event) => setAltText(event.target.value)}
+              />
+            </div>
+            {selectedFile ? (
+              <div className="rounded-lg border bg-background p-3 text-sm">
+                <p className="font-medium">{selectedFile.name}</p>
+                <p className="text-muted-foreground">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            ) : null}
+            <Button
+              type="button"
+              onClick={() => {
+                if (!selectedFile) return
+                uploadMutation.mutate({
+                  file: selectedFile,
+                  altText: altText || undefined,
+                })
+              }}
+              disabled={!selectedFile || uploadMutation.isPending}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {uploadMutation.isPending
+                ? "Uploading..."
+                : "Upload and use"}
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  )
+}
+
+export function MediaAssetPicker({
+  label,
+  value,
+  onChange,
+  helperText,
+  className,
+}: MediaAssetPickerProps) {
+  const [open, setOpen] = useState(false)
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -84,107 +195,13 @@ export function MediaAssetPicker({
                 <DialogTitle>Choose media</DialogTitle>
               </DialogHeader>
 
-              <Tabs defaultValue="library" className="flex h-full flex-col">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="library">Media library</TabsTrigger>
-                  <TabsTrigger value="upload">Upload new</TabsTrigger>
-                </TabsList>
-
-                <TabsContent
-                  value="library"
-                  className="mt-4 max-h-[60vh] overflow-y-auto"
-                >
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {mediaAssets.map((asset) => (
-                      <button
-                        key={asset._id}
-                        type="button"
-                        onClick={() => {
-                          onChange(asset.url)
-                          setOpen(false)
-                        }}
-                        className={cn(
-                          "group overflow-hidden rounded-xl border text-left transition-all hover:border-primary/60",
-                          value === asset.url &&
-                            "border-primary ring-1 ring-primary"
-                        )}
-                      >
-                        <div className="aspect-square bg-muted/20">
-                          <img
-                            src={asset.url}
-                            alt={asset.altText ?? asset.originalName}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                        <div className="space-y-1 p-3">
-                          <p className="truncate text-sm font-medium">
-                            {asset.originalName}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {asset.url}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                    {mediaAssets.length === 0 && (
-                      <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                        No media uploaded yet.
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="upload" className="mt-4 space-y-4">
-                  <Card className="border-border/70 bg-muted/10">
-                    <CardContent className="space-y-4 p-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={uploadId}>Choose image</Label>
-                        <Input
-                          id={uploadId}
-                          type="file"
-                          accept="image/*"
-                          onChange={(event) =>
-                            setSelectedFile(event.target.files?.[0] ?? null)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={altId}>Alt text</Label>
-                        <Input
-                          id={altId}
-                          placeholder="Describe the image"
-                          value={altText}
-                          onChange={(event) => setAltText(event.target.value)}
-                        />
-                      </div>
-                      {selectedFile ? (
-                        <div className="rounded-lg border bg-background p-3 text-sm">
-                          <p className="font-medium">{selectedFile.name}</p>
-                          <p className="text-muted-foreground">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      ) : null}
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          if (!selectedFile) return
-                          uploadMutation.mutate({
-                            file: selectedFile,
-                            altText: altText || undefined,
-                          })
-                        }}
-                        disabled={!selectedFile || uploadMutation.isPending}
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        {uploadMutation.isPending
-                          ? "Uploading..."
-                          : "Upload and use"}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              <MediaLibrary 
+                value={value} 
+                onSelect={(url) => {
+                  onChange(url)
+                  setOpen(false)
+                }} 
+              />
             </DialogContent>
           </Dialog>
 
@@ -193,8 +210,6 @@ export function MediaAssetPicker({
             variant="outline"
             className="justify-start"
             onClick={() => {
-              setSelectedFile(null)
-              setAltText("")
               onChange("")
             }}
           >
