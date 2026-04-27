@@ -69,8 +69,10 @@ export function ResetPasswordPage() {
       setTimeout(() => {
         navigate("/login", { replace: true })
       }, 1200)
-    } catch (err: any) {
-      setError(err?.message ?? "Unable to reset password.")
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Unable to reset password."
+      )
     } finally {
       setLoading(false)
     }

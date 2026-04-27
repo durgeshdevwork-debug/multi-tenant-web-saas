@@ -1,8 +1,14 @@
 import { useState, useEffect, useMemo } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { Building, Users, Loader2, RefreshCw, Save, Plus } from "lucide-react"
-import { getClients, getClient, updateClient, regenerateApiKey, type Tenant } from "@/lib/api"
+import {
+  getClient,
+  regenerateApiKey,
+  updateClient,
+} from "@/features/admin/services/clients.api"
+import { useAdminClientsQuery } from "@/features/admin/hooks/use-admin-data"
+import type { Tenant, TenantStatus } from "@/features/content/types"
 import {
   Card,
   CardContent,
@@ -15,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -27,13 +34,10 @@ export function ClientsTab() {
   const queryClient = useQueryClient()
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
 
-  const clientsQuery = useQuery({
-    queryKey: ["clients"],
-    queryFn: getClients,
-  })
+  const clientsQuery = useAdminClientsQuery()
 
   const selectedClientQuery = useQuery({
-    queryKey: ["client", selectedClientId],
+    queryKey: ["admin", "client", selectedClientId],
     queryFn: () => getClient(selectedClientId as string),
     enabled: Boolean(selectedClientId),
   })
@@ -42,10 +46,10 @@ export function ClientsTab() {
     mutationFn: ({ id, data }: { id: string; data: Partial<Tenant> }) =>
       updateClient(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "clients"] })
       if (selectedClientId) {
         queryClient.invalidateQueries({
-          queryKey: ["client", selectedClientId],
+          queryKey: ["admin", "client", selectedClientId],
         })
       }
     },
@@ -54,10 +58,10 @@ export function ClientsTab() {
   const refreshKeyMutation = useMutation({
     mutationFn: regenerateApiKey,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "clients"] })
       if (selectedClientId) {
         queryClient.invalidateQueries({
-          queryKey: ["client", selectedClientId],
+          queryKey: ["admin", "client", selectedClientId],
         })
       }
     },
@@ -126,7 +130,8 @@ export function ClientsTab() {
       </CardHeader>
       <CardContent>
         <div className="grid gap-6 lg:grid-cols-[1fr,2fr]">
-          <div className="custom-scrollbar max-h-[600px] space-y-3 overflow-y-auto pr-2">
+          <ScrollArea className="h-[600px] pr-4">
+            <div className="space-y-3">
             {(clientsQuery.data as Tenant[] | undefined)?.map((client) => (
               <div
                 key={client._id}
@@ -170,7 +175,8 @@ export function ClientsTab() {
                 No clients found.
               </div>
             )}
-          </div>
+            </div>
+          </ScrollArea>
 
           <div className="h-fit overflow-hidden rounded-xl border bg-background/50 shadow-sm backdrop-blur">
             {!selectedClientId ? (
@@ -250,7 +256,7 @@ export function ClientsTab() {
                         onValueChange={(value) =>
                           setClientDetailForm(
                             (prev) =>
-                              prev && { ...prev, status: value as any }
+                              prev && { ...prev, status: value as TenantStatus }
                           )
                         }
                       >

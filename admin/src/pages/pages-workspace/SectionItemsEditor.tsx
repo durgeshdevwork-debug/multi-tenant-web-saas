@@ -3,7 +3,7 @@ import { MediaAssetPicker } from "@/components/media-asset-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { type PageSection, type PageSectionItem } from "@/lib/api"
+import type { PageSection, PageSectionItem } from "@/features/content/types"
 
 export function SectionItemsEditor({
   section,

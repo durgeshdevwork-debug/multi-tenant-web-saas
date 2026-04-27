@@ -12,8 +12,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { listMediaAssets, uploadMediaAsset, type MediaAsset } from "@/lib/api"
+import {
+  listMediaAssets,
+  uploadMediaAsset,
+} from "@/features/content/services/media.api"
+import type { MediaAsset } from "@/features/content/types"
 import { Image, Upload, X } from "lucide-react"
 
 type MediaAssetPickerProps = {
@@ -62,11 +67,9 @@ export function MediaLibrary({
         <TabsTrigger value="upload">Upload new</TabsTrigger>
       </TabsList>
 
-      <TabsContent
-        value="library"
-        className="mt-4 max-h-[60vh] overflow-y-auto"
-      >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <TabsContent value="library" className="mt-4">
+        <ScrollArea className="h-[60vh] pr-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {mediaAssets.map((asset) => (
             <button
               key={asset._id}
@@ -102,7 +105,8 @@ export function MediaLibrary({
               No media uploaded yet.
             </div>
           )}
-        </div>
+          </div>
+        </ScrollArea>
       </TabsContent>
 
       <TabsContent value="upload" className="mt-4 space-y-4">

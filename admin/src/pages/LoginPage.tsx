@@ -15,10 +15,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 
-type SessionUser = {
-  role?: "admin" | "user"
-}
-
 export function LoginPage({ mode }: { mode: "admin" | "user" }) {
   const navigate = useNavigate()
   const { data: session, isPending } = useSession()
@@ -46,13 +42,11 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
     try {
       const loginFn = mode === "admin" ? signInAdminEmail : signInEmail
       const response = await loginFn({ email, password, rememberMe: true })
-      console.log("check resp : ", response)
       if (response?.error) {
         setError(response.error.message ?? "Login failed.")
         return
       }
       const user = response?.data?.user
-      console.log('user : ', user)
       if (!user) {
         setError("Login failed. Please check your credentials.")
         return
@@ -71,8 +65,8 @@ export function LoginPage({ mode }: { mode: "admin" | "user" }) {
       }
 
       navigate(mode === "admin" ? "/admin" : "/", { replace: true })
-    } catch (err: any) {
-      setError(err?.message ?? "Login failed.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed.")
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Navigate, Outlet, useLocation } from "react-router-dom"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
@@ -13,7 +13,6 @@ export function ProtectedLayout({
   requiredRole?: DashboardRole
 }) {
   const { data: session, isPending } = useSession()
-  const navigate = useNavigate()
   const location = useLocation()
 
   const user = session?.user as
@@ -115,8 +114,6 @@ export function ProtectedLayout({
     }
   }
 
-  const roleLabel = user.role === "admin" ? "Admin access" : "User access"
-
   return (
     <SidebarProvider defaultOpen>
       <AppSidebar
@@ -131,17 +128,16 @@ export function ProtectedLayout({
             requiredRole === "admin" ? "/admin/login" : "/login"
         }}
       />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="h-svh min-h-0 overflow-hidden bg-background">
         <SiteHeader
           title={pageMeta.title}
-          roleLabel={roleLabel}
           onSignOut={async () => {
             await signOut()
             window.location.href =
               requiredRole === "admin" ? "/admin/login" : "/login"
           }}
         />
-        <div className="flex-1 px-4 py-6 md:px-6 lg:px-8">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden px-4 py-6 md:px-6 lg:px-8">
           <Outlet />
         </div>
       </SidebarInset>

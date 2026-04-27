@@ -1,8 +1,10 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { FileText, Plus, Loader2 } from "lucide-react"
-import { getTemplates, createTemplate, type Template } from "@/lib/api"
+import { createTemplate } from "@/features/admin/services/templates.api"
+import { useAdminTemplatesQuery } from "@/features/admin/hooks/use-admin-data"
+import type { Template } from "@/features/content/types"
 import {
   Card,
   CardContent,
@@ -15,29 +17,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 
-const defaultModules = ["landing", "about", "services", "blog", "contact"]
-
 export function TemplatesTab() {
   const queryClient = useQueryClient()
   const [templateForm, setTemplateForm] = useState({
     name: "",
     identifier: "",
-    modules: defaultModules.join(", "),
+    modules: "",
   })
 
-  const templatesQuery = useQuery({
-    queryKey: ["templates"],
-    queryFn: getTemplates,
-  })
+  const templatesQuery = useAdminTemplatesQuery()
 
   const createTemplateMutation = useMutation({
     mutationFn: createTemplate,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["templates"] })
+      queryClient.invalidateQueries({ queryKey: ["admin", "templates"] })
       setTemplateForm({
         name: "",
         identifier: "",
-        modules: defaultModules.join(", "),
+        modules: "",
       })
     },
   })

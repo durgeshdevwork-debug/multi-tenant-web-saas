@@ -47,7 +47,7 @@ export function NavDocuments({
                 to={item.url}
                 className={({ isActive }) =>
                   cn(
-                    "flex w-full items-center gap-2 rounded-none",
+                    "flex w-full items-center gap-2",
                     isActive &&
                       "bg-sidebar-accent text-sidebar-accent-foreground"
                   )

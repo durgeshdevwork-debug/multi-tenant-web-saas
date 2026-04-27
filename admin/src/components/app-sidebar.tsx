@@ -1,10 +1,7 @@
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
+import { Link, NavLink } from "react-router-dom"
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -25,11 +22,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { NavUser } from "@/components/nav-user"
+import { listPageTree } from "@/features/content/services/pages.api"
+import type { Page } from "@/features/content/types"
 import type { DashboardRole } from "@/lib/roles"
+import { cn } from "@/lib/utils"
 import {
+  ArrowRight,
+  CaretDown,
   ChartBar,
   ChatsCircle,
-  Command,
   Files,
   FolderOpen,
   Gear,
@@ -40,16 +42,13 @@ import {
   PlusSquare,
   SlidersHorizontal,
   Users,
-  CaretDown,
 } from "@phosphor-icons/react"
-import { Link, NavLink } from "react-router-dom"
-import { listPageTree, type Page } from "@/lib/api"
-import { cn } from "@/lib/utils"
 
 const sidebarConfig: Record<
   DashboardRole,
   {
     brand: string
+    mark: string
     subtitle: string
     user: {
       name: string
@@ -62,7 +61,8 @@ const sidebarConfig: Record<
   }
 > = {
   admin: {
-    brand: "multi tenant Admin",
+    brand: "Multi Tenant Admin",
+    mark: "MT",
     subtitle: "Tenant operations and platform health",
     user: {
       name: "admin",
@@ -80,15 +80,12 @@ const sidebarConfig: Record<
     ],
     secondary: [
       { title: "Clients", url: "/admin/clients", icon: <Gear /> },
-      {
-        title: "Templates",
-        url: "/admin/templates",
-        icon: <MagnifyingGlass />,
-      },
+      { title: "Templates", url: "/admin/templates", icon: <MagnifyingGlass /> },
     ],
   },
   user: {
     brand: "Tenant Portal",
+    mark: "TP",
     subtitle: "Pages, branding, and media for your website",
     user: {
       name: "shadcn",
@@ -107,6 +104,96 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   onSignOut: () => void
 }
 
+function SidebarBrand({
+  role,
+  brand,
+  subtitle,
+  mark,
+}: {
+  role: DashboardRole
+  brand: string
+  subtitle: string
+  mark: string
+}) {
+  return (
+    <SidebarHeader className="gap-3 border-b border-sidebar-border/70 px-3 py-4">
+      <Link
+        to={role === "admin" ? "/admin/clients" : "/pages"}
+        className="group flex items-center gap-3 rounded-[var(--radius)] border border-sidebar-border/80 bg-sidebar-accent/20 p-3 transition-colors hover:bg-sidebar-accent/30"
+      >
+        <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius)] border border-sidebar-border bg-gradient-to-br from-sidebar-primary/20 via-sidebar-accent/30 to-sidebar/60 shadow-sm">
+          <span className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
+          <span className="relative text-sm font-bold tracking-[0.24em] text-sidebar-foreground">
+            {mark}
+          </span>
+        </span>
+
+        <span className="grid min-w-0 flex-1 text-left leading-tight">
+          <span className="truncate text-sm font-semibold text-sidebar-foreground">
+            {brand}
+          </span>
+          <span className="truncate text-xs text-sidebar-foreground/70">
+            {subtitle}
+          </span>
+        </span>
+
+        <ArrowRight className="ml-auto size-4 text-sidebar-foreground/45 transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    </SidebarHeader>
+  )
+}
+
+function SidebarSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      {description ? (
+        <p className="px-2 pb-2 text-xs leading-5 text-sidebar-foreground/60">
+          {description}
+        </p>
+      ) : null}
+      <SidebarGroupContent>{children}</SidebarGroupContent>
+    </SidebarGroup>
+  )
+}
+
+function SidebarNavLink({
+  to,
+  label,
+  icon,
+  tooltip,
+}: {
+  to: string
+  label: string
+  icon: React.ReactNode
+  tooltip?: string
+}) {
+  return (
+    <SidebarMenuButton asChild tooltip={tooltip ?? label}>
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          cn(
+            "flex w-full items-center gap-2",
+            isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+          )
+        }
+      >
+        {icon}
+        <span>{label}</span>
+      </NavLink>
+    </SidebarMenuButton>
+  )
+}
+
 function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) {
   const hasChildren = Boolean(page.children?.length)
   const [isOpen, setIsOpen] = React.useState(true)
@@ -121,7 +208,7 @@ function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) 
                 to={`/pages/${page.id ?? page._id}`}
                 className={({ isActive }) =>
                   cn(
-                    "flex w-full items-center gap-2 rounded-none",
+                    "flex w-full items-center gap-2",
                     isActive &&
                       "bg-sidebar-accent text-sidebar-accent-foreground"
                   )
@@ -130,32 +217,33 @@ function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) 
                 <span>{page.navigationLabel || page.title}</span>
               </NavLink>
             </SidebarMenuSubButton>
-            {hasChildren && (
+            {hasChildren ? (
               <CollapsibleTrigger asChild>
-                <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-sidebar-accent">
+                <button className="flex size-7 items-center justify-center rounded-[var(--radius)] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <CaretDown
                     className={cn(
-                      "h-3 w-3 transition-transform duration-200",
+                      "size-3 transition-transform duration-200",
                       isOpen ? "rotate-0" : "-rotate-90"
                     )}
                   />
                 </button>
               </CollapsibleTrigger>
-            )}
+            ) : null}
           </div>
-          {hasChildren && (
+
+          {hasChildren ? (
             <CollapsibleContent>
               <SidebarMenuSub>
                 {page.children?.map((child) => (
                   <PageTreeItem
                     key={child.id ?? child._id}
                     page={child}
-                    isSub={true}
+                    isSub
                   />
                 ))}
               </SidebarMenuSub>
             </CollapsibleContent>
-          )}
+          ) : null}
         </Collapsible>
       </SidebarMenuSubItem>
     )
@@ -170,7 +258,7 @@ function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) 
               to={`/pages/${page.id ?? page._id}`}
               className={({ isActive }) =>
                 cn(
-                  "flex w-full items-center gap-2 rounded-none",
+                  "flex w-full items-center gap-2",
                   isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )
               }
@@ -179,33 +267,34 @@ function PageTreeItem({ page, isSub = false }: { page: Page; isSub?: boolean }) 
               <span>{page.navigationLabel || page.title}</span>
             </NavLink>
           </SidebarMenuButton>
-          {hasChildren && (
+
+          {hasChildren ? (
             <CollapsibleTrigger asChild>
-              <button className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-sidebar-accent">
+              <button className="flex size-8 items-center justify-center rounded-[var(--radius)] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                 <CaretDown
                   className={cn(
-                    "h-4 w-4 transition-transform duration-200",
+                    "size-4 transition-transform duration-200",
                     isOpen ? "rotate-0" : "-rotate-90"
                   )}
                 />
               </button>
             </CollapsibleTrigger>
-          )}
+          ) : null}
         </div>
 
-        {hasChildren && (
+        {hasChildren ? (
           <CollapsibleContent>
             <SidebarMenuSub>
               {page.children?.map((child) => (
                 <PageTreeItem
                   key={child.id ?? child._id}
                   page={child}
-                  isSub={true}
+                  isSub
                 />
               ))}
             </SidebarMenuSub>
           </CollapsibleContent>
-        )}
+        ) : null}
       </Collapsible>
     </SidebarMenuItem>
   )
@@ -221,94 +310,59 @@ function UserSidebarContent() {
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupContent className="flex flex-col gap-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Create Page"
-                className="min-w-8 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+      <SidebarSection
+        title="Pages"
+        description="Create pages, manage hierarchy, and edit content."
+      >
+        <SidebarMenu className="gap-1.5">
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild variant="outline" tooltip="Create Page">
+              <NavLink
+                to="/pages/new"
+                className="flex w-full items-center gap-2"
               >
-                <Link to="/pages/new">
-                  <PlusSquare />
-                  <span>Create Page</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+                <PlusSquare />
+                <span>New Page</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarNavLink
+              to="/pages"
+              label="Pages Overview"
+              icon={<Layout />}
+              tooltip="All Pages"
+            />
+          </SidebarMenuItem>
+          {pageTree.map((page) => (
+            <PageTreeItem key={page.id ?? page._id} page={page} />
+          ))}
+        </SidebarMenu>
+      </SidebarSection>
 
-      <SidebarGroup>
-        <SidebarGroupLabel>Pages</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="All Pages">
-                <NavLink
-                  to="/pages"
-                  className={({ isActive }) =>
-                    cn(
-                      "flex w-full items-center gap-2 rounded-none",
-                      isActive &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )
-                  }
-                >
-                  <Layout />
-                  <span>Pages Overview</span>
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            {pageTree.map((page) => (
-              <PageTreeItem key={page.id ?? page._id} page={page} />
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Global</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Site Settings">
-                <NavLink
-                  to="/site-settings"
-                  className={({ isActive }) =>
-                    cn(
-                      "flex w-full items-center gap-2 rounded-none",
-                      isActive &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )
-                  }
-                >
-                  <SlidersHorizontal />
-                  <span>Site Settings</span>
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Media Library">
-                <NavLink
-                  to="/media"
-                  className={({ isActive }) =>
-                    cn(
-                      "flex w-full items-center gap-2 rounded-none",
-                      isActive &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )
-                  }
-                >
-                  <Image />
-                  <span>Media Library</span>
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      <SidebarSection
+        title="Global"
+        description="Shared settings used across the entire site."
+      >
+        <SidebarMenu className="gap-1.5">
+          <SidebarMenuItem>
+            <SidebarNavLink
+              to="/site-settings"
+              label="Site Settings"
+              icon={<SlidersHorizontal />}
+              tooltip="Site Settings"
+            />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarNavLink
+              to="/media"
+              label="Media Library"
+              icon={<Image />}
+              tooltip="Media Library"
+            />
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarSection>
     </>
   )
 }
@@ -323,46 +377,66 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader className="gap-3 border-b border-sidebar-border/70 pb-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
-              <Link to={role === "admin" ? "/admin/clients" : "/pages"}>
-                <Command className="size-5" />
-                <span className="text-base font-semibold">{config.brand}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarBrand
+        role={role}
+        brand={config.brand}
+        subtitle={config.subtitle}
+        mark={config.mark}
+      />
 
-        <div className="px-2">
-          <Link
-            to={role === "admin" ? "/admin/onboard" : "/pages/new"}
-            className="flex w-full items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-left text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
-          >
-            <span className="flex items-center gap-2">
-              <span className="inline-flex size-6 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                +
-              </span>
-              {role === "admin" ? "Quick Create" : "New Page"}
-            </span>
-            <span className="text-xs text-muted-foreground">New</span>
-          </Link>
-          <p className="mt-2 px-1 text-xs text-sidebar-foreground/70">
-            {config.subtitle}
-          </p>
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="gap-4">
+      <SidebarContent className="gap-5 px-1.5">
         {role === "admin" ? (
           <>
-            <NavMain items={config.navMain ?? []} />
-            <NavDocuments items={config.documents ?? []} />
-            <NavSecondary items={config.secondary ?? []} className="mt-auto" />
+            <SidebarSection
+              title="Operations"
+              description="Primary workspace entry points for the admin team."
+            >
+              <SidebarMenu className="gap-1.5">
+                {(config.navMain ?? []).map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarNavLink
+                      to={item.url}
+                      label={item.title}
+                      icon={item.icon}
+                      tooltip={item.title}
+                    />
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Resources"
+              description="Supporting pages and operational references."
+            >
+              <SidebarMenu className="gap-1.5">
+                {(config.documents ?? []).map((item) => (
+                  <SidebarMenuItem key={item.name}>
+                    <SidebarNavLink
+                      to={item.url}
+                      label={item.name}
+                      icon={item.icon}
+                      tooltip={item.name}
+                    />
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarSection>
+
+            <SidebarSection title="Quick Links">
+              <SidebarMenu className="gap-1.5">
+                {(config.secondary ?? []).map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarNavLink
+                      to={item.url}
+                      label={item.title}
+                      icon={item.icon}
+                      tooltip={item.title}
+                    />
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarSection>
           </>
         ) : (
           <UserSidebarContent />

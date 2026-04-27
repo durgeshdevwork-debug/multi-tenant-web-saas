@@ -15,8 +15,8 @@ import {
   deleteMediaAsset,
   listMediaAssets,
   uploadMediaAsset,
-  type MediaAsset,
-} from "@/lib/api"
+} from "@/features/content/services/media.api"
+import type { MediaAsset } from "@/features/content/types"
 import { Loader2, Trash2, Upload, Image as ImageIcon } from "lucide-react"
 
 export function MediaLibraryPage() {

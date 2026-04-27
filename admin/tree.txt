@@ -1,0 +1,265 @@
+📁 File Tree for: /opt/projects/durgesh/multi-tenant-web-saas/admin
+
+├── .env
+├── .env.example
+├── .gitignore
+├── .prettierignore
+├── .prettierrc
+├── README.md
+├── components.json
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   └── vite.svg
+├── src
+│   ├── App.tsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── app-sidebar.tsx
+│   │   ├── data-table.tsx
+│   │   ├── editor
+│   │   │   ├── EditorX.tsx
+│   │   │   ├── context
+│   │   │   │   └── toolbar-context.tsx
+│   │   │   ├── editor-hooks
+│   │   │   │   ├── use-debounce.ts
+│   │   │   │   ├── use-modal.tsx
+│   │   │   │   ├── use-report.ts
+│   │   │   │   └── use-update-toolbar.ts
+│   │   │   ├── editor-ui
+│   │   │   │   ├── code-button.tsx
+│   │   │   │   ├── color-picker.tsx
+│   │   │   │   ├── content-editable.tsx
+│   │   │   │   ├── date-time-component.tsx
+│   │   │   │   ├── image-component.tsx
+│   │   │   │   └── image-resizer.tsx
+│   │   │   ├── extensions
+│   │   │   │   ├── auto-link-extension.tsx
+│   │   │   │   ├── date-time-extension.tsx
+│   │   │   │   ├── drag-drop-paste-extension.tsx
+│   │   │   │   ├── emojis-extension.tsx
+│   │   │   │   ├── images-extension.tsx
+│   │   │   │   ├── keywords-extension.tsx
+│   │   │   │   ├── markdown-shortcuts-extension.tsx
+│   │   │   │   └── max-length-extension.tsx
+│   │   │   ├── nodes
+│   │   │   │   ├── autocomplete-node.tsx
+│   │   │   │   ├── date-time-node.tsx
+│   │   │   │   ├── embeds
+│   │   │   │   │   ├── tweet-node.tsx
+│   │   │   │   │   └── youtube-node.tsx
+│   │   │   │   ├── emoji-node.tsx
+│   │   │   │   ├── image-node.tsx
+│   │   │   │   ├── keyword-node.tsx
+│   │   │   │   ├── layout-container-node.tsx
+│   │   │   │   ├── layout-item-node.tsx
+│   │   │   │   ├── mention-node.ts
+│   │   │   │   └── special-text-node.tsx
+│   │   │   ├── plugins
+│   │   │   │   ├── actions
+│   │   │   │   │   ├── actions-plugin.tsx
+│   │   │   │   │   ├── clear-editor-plugin.tsx
+│   │   │   │   │   ├── counter-character-plugin.tsx
+│   │   │   │   │   ├── edit-mode-toggle-plugin.tsx
+│   │   │   │   │   ├── import-export-plugin.tsx
+│   │   │   │   │   ├── markdown-toggle-plugin.tsx
+│   │   │   │   │   ├── share-content-plugin.tsx
+│   │   │   │   │   ├── speech-to-text-plugin.tsx
+│   │   │   │   │   └── tree-view-plugin.tsx
+│   │   │   │   ├── auto-complete-plugin.tsx
+│   │   │   │   ├── code-action-menu-plugin.tsx
+│   │   │   │   ├── code-highlight-plugin.tsx
+│   │   │   │   ├── component-picker-menu-plugin.tsx
+│   │   │   │   ├── context-menu-plugin.tsx
+│   │   │   │   ├── draggable-block-plugin.tsx
+│   │   │   │   ├── embeds
+│   │   │   │   │   ├── auto-embed-plugin.tsx
+│   │   │   │   │   ├── twitter-plugin.tsx
+│   │   │   │   │   └── youtube-plugin.tsx
+│   │   │   │   ├── emoji-picker-plugin.tsx
+│   │   │   │   ├── floating-link-editor-plugin.tsx
+│   │   │   │   ├── floating-text-format-plugin.tsx
+│   │   │   │   ├── layout-plugin.tsx
+│   │   │   │   ├── mentions-plugin.tsx
+│   │   │   │   ├── picker
+│   │   │   │   │   ├── alignment-picker-plugin.tsx
+│   │   │   │   │   ├── bulleted-list-picker-plugin.tsx
+│   │   │   │   │   ├── check-list-picker-plugin.tsx
+│   │   │   │   │   ├── code-picker-plugin.tsx
+│   │   │   │   │   ├── columns-layout-picker-plugin.tsx
+│   │   │   │   │   ├── component-picker-option.tsx
+│   │   │   │   │   ├── date-time-picker-plugin.tsx
+│   │   │   │   │   ├── divider-picker-plugin.tsx
+│   │   │   │   │   ├── embeds-picker-plugin.tsx
+│   │   │   │   │   ├── heading-picker-plugin.tsx
+│   │   │   │   │   ├── image-picker-plugin.tsx
+│   │   │   │   │   ├── numbered-list-picker-plugin.tsx
+│   │   │   │   │   ├── paragraph-picker-plugin.tsx
+│   │   │   │   │   ├── quote-picker-plugin.tsx
+│   │   │   │   │   └── table-picker-plugin.tsx
+│   │   │   │   ├── special-text-plugin.tsx
+│   │   │   │   ├── tab-focus-plugin.tsx
+│   │   │   │   ├── table-plugin.tsx
+│   │   │   │   ├── toolbar
+│   │   │   │   │   ├── block-format
+│   │   │   │   │   │   ├── block-format-data.tsx
+│   │   │   │   │   │   ├── format-bulleted-list.tsx
+│   │   │   │   │   │   ├── format-check-list.tsx
+│   │   │   │   │   │   ├── format-code-block.tsx
+│   │   │   │   │   │   ├── format-heading.tsx
+│   │   │   │   │   │   ├── format-numbered-list.tsx
+│   │   │   │   │   │   ├── format-paragraph.tsx
+│   │   │   │   │   │   └── format-quote.tsx
+│   │   │   │   │   ├── block-format-toolbar-plugin.tsx
+│   │   │   │   │   ├── block-insert
+│   │   │   │   │   │   ├── insert-columns-layout.tsx
+│   │   │   │   │   │   ├── insert-embeds.tsx
+│   │   │   │   │   │   ├── insert-horizontal-rule.tsx
+│   │   │   │   │   │   ├── insert-image.tsx
+│   │   │   │   │   │   └── insert-table.tsx
+│   │   │   │   │   ├── block-insert-plugin.tsx
+│   │   │   │   │   ├── clear-formatting-toolbar-plugin.tsx
+│   │   │   │   │   ├── code-language-toolbar-plugin.tsx
+│   │   │   │   │   ├── element-format-toolbar-plugin.tsx
+│   │   │   │   │   ├── font-background-toolbar-plugin.tsx
+│   │   │   │   │   ├── font-color-toolbar-plugin.tsx
+│   │   │   │   │   ├── font-family-toolbar-plugin.tsx
+│   │   │   │   │   ├── font-format-toolbar-plugin.tsx
+│   │   │   │   │   ├── font-size-toolbar-plugin.tsx
+│   │   │   │   │   ├── history-toolbar-plugin.tsx
+│   │   │   │   │   ├── link-toolbar-plugin.tsx
+│   │   │   │   │   ├── subsuper-toolbar-plugin.tsx
+│   │   │   │   │   └── toolbar-plugin.tsx
+│   │   │   │   └── typing-pref-plugin.tsx
+│   │   │   ├── shared
+│   │   │   │   ├── can-use-dom.ts
+│   │   │   │   ├── caret-from-point.ts
+│   │   │   │   ├── environment.ts
+│   │   │   │   ├── invariant.ts
+│   │   │   │   ├── normalize-class-names.ts
+│   │   │   │   ├── react-patches.ts
+│   │   │   │   ├── react-test-utils.ts
+│   │   │   │   ├── simple-diff-with-cursor.ts
+│   │   │   │   └── use-layout-effect.ts
+│   │   │   ├── themes
+│   │   │   │   ├── editor-theme.css
+│   │   │   │   └── editor-theme.ts
+│   │   │   ├── transformers
+│   │   │   │   ├── markdown-emoji-transformer.ts
+│   │   │   │   ├── markdown-hr-transformer.ts
+│   │   │   │   ├── markdown-image-transformer.ts
+│   │   │   │   ├── markdown-table-transformer.ts
+│   │   │   │   └── markdown-tweet-transformer.ts
+│   │   │   └── utils
+│   │   │       ├── doc-serialization.ts
+│   │   │       ├── emoji-list.ts
+│   │   │       ├── get-dom-range-rect.ts
+│   │   │       ├── get-selected-node.ts
+│   │   │       ├── guard.ts
+│   │   │       ├── set-floating-elem-position-for-link-editor.ts
+│   │   │       ├── set-floating-elem-position.ts
+│   │   │       ├── swipe.ts
+│   │   │       └── url.ts
+│   │   ├── layouts
+│   │   │   └── ProtectedLayout.tsx
+│   │   ├── media-asset-picker.tsx
+│   │   ├── nav-documents.tsx
+│   │   ├── nav-main.tsx
+│   │   ├── nav-secondary.tsx
+│   │   ├── nav-user.tsx
+│   │   ├── section-cards.tsx
+│   │   ├── site-header.tsx
+│   │   ├── theme-provider.tsx
+│   │   └── ui
+│   │       ├── accordion.tsx
+│   │       ├── alert-dialog.tsx
+│   │       ├── alert.tsx
+│   │       ├── aspect-ratio.tsx
+│   │       ├── avatar.tsx
+│   │       ├── badge.tsx
+│   │       ├── breadcrumb.tsx
+│   │       ├── button-group.tsx
+│   │       ├── button.tsx
+│   │       ├── calendar.tsx
+│   │       ├── card.tsx
+│   │       ├── carousel.tsx
+│   │       ├── chart.tsx
+│   │       ├── checkbox.tsx
+│   │       ├── collapsible.tsx
+│   │       ├── combobox.tsx
+│   │       ├── command.tsx
+│   │       ├── context-menu.tsx
+│   │       ├── dialog.tsx
+│   │       ├── direction.tsx
+│   │       ├── drawer.tsx
+│   │       ├── dropdown-menu.tsx
+│   │       ├── empty.tsx
+│   │       ├── field.tsx
+│   │       ├── hover-card.tsx
+│   │       ├── input-group.tsx
+│   │       ├── input-otp.tsx
+│   │       ├── input.tsx
+│   │       ├── item.tsx
+│   │       ├── kbd.tsx
+│   │       ├── label.tsx
+│   │       ├── menubar.tsx
+│   │       ├── native-select.tsx
+│   │       ├── navigation-menu.tsx
+│   │       ├── pagination.tsx
+│   │       ├── popover.tsx
+│   │       ├── progress.tsx
+│   │       ├── radio-group.tsx
+│   │       ├── resizable.tsx
+│   │       ├── scroll-area.tsx
+│   │       ├── select.tsx
+│   │       ├── separator.tsx
+│   │       ├── sheet.tsx
+│   │       ├── sidebar.tsx
+│   │       ├── skeleton.tsx
+│   │       ├── slider.tsx
+│   │       ├── sonner.tsx
+│   │       ├── spinner.tsx
+│   │       ├── switch.tsx
+│   │       ├── table.tsx
+│   │       ├── tabs.tsx
+│   │       ├── textarea.tsx
+│   │       ├── toggle-group.tsx
+│   │       ├── toggle.tsx
+│   │       └── tooltip.tsx
+│   ├── hooks
+│   │   └── use-mobile.ts
+│   ├── index.css
+│   ├── lib
+│   │   ├── api.ts
+│   │   ├── auth.ts
+│   │   ├── roles.ts
+│   │   └── utils.ts
+│   ├── main.tsx
+│   ├── pages
+│   │   ├── AdminDashboard.tsx
+│   │   ├── LoginPage.tsx
+│   │   ├── MediaLibraryPage.tsx
+│   │   ├── PagesWorkspacePage.tsx
+│   │   ├── ResetPasswordPage.tsx
+│   │   ├── SiteSettingsPage.tsx
+│   │   ├── admin-dashboard
+│   │   │   ├── ClientsTab.tsx
+│   │   │   ├── OnboardTab.tsx
+│   │   │   └── TemplatesTab.tsx
+│   │   └── pages-workspace
+│   │       ├── PageEditor.tsx
+│   │       ├── PageOverview.tsx
+│   │       ├── PageSectionEditor.tsx
+│   │       ├── SectionItemsEditor.tsx
+│   │       └── utils.ts
+│   └── router.tsx
+├── tree.js
+├── tree.txt
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+

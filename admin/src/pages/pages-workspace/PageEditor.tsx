@@ -1,24 +1,11 @@
-import { useState, useMemo, useEffect } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useMemo, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useParams } from "react-router-dom"
-import {
-  ExternalLink,
-  Files,
-  Loader2,
-  Plus,
-  Save,
-  Trash2,
-} from "lucide-react"
+import { Loader2, Plus, Save, Trash2 } from "lucide-react"
+
 import { MediaAssetPicker } from "@/components/media-asset-picker"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -28,57 +15,50 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { FormSection } from "@/components/forms/form-section"
+import { usePagesQuery } from "@/features/content/hooks/use-pages"
+import { usePageQuery } from "@/features/content/hooks/use-page"
 import {
   createPage,
   deletePage,
-  getPage,
-  listPages,
   updatePage,
-  type Page,
-} from "@/lib/api"
-import { emptyPage, createSection, move } from "./utils"
+} from "@/features/content/services/pages.api"
+import type { Page } from "@/features/content/types"
 import { PageSectionEditor } from "./PageSectionEditor"
+import { createSection, emptyPage, move } from "./utils"
 
 export function PageEditor() {
   const { pageId } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const pagesQuery = useQuery({
-    queryKey: ["content", "pages"],
-    queryFn: listPages,
-  })
-
-  const pageQuery = useQuery({
-    queryKey: ["content", "page", pageId],
-    queryFn: () => getPage(pageId as string),
-    enabled: Boolean(pageId) && pageId !== "new",
-  })
+  const pagesQuery = usePagesQuery()
+  const pageQuery = usePageQuery(pageId)
+  const isCreateMode = pageId === "new"
 
   const [form, setForm] = useState<Page>(emptyPage())
 
   useEffect(() => {
-    if (pageId === "new") {
+    if (isCreateMode) {
       setForm(emptyPage())
       return
     }
 
     if (pageQuery.data) {
-      const page = pageQuery.data as Page
+      const page = pageQuery.data
       setForm({
         ...emptyPage(),
         ...page,
         parentId: page.parentId ?? null,
-        sections: page.sections?.length
-          ? page.sections
-          : [createSection("hero")],
+        sections: page.sections?.length ? page.sections : [],
       })
     }
-  }, [pageId, pageQuery.data])
+  }, [isCreateMode, pageQuery.data])
 
-  const createMutation = useMutation<Page, Error, Page>({
+  const createMutation = useMutation({
     mutationFn: createPage,
     onSuccess: (page) => {
       queryClient.invalidateQueries({ queryKey: ["content", "pages"] })
@@ -87,11 +67,7 @@ export function PageEditor() {
     },
   })
 
-  const updateMutation = useMutation<
-    Page,
-    Error,
-    { id: string; payload: Page }
-  >({
+  const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Page }) =>
       updatePage(id, payload),
     onSuccess: () => {
@@ -112,371 +88,364 @@ export function PageEditor() {
     },
   })
 
-  const availableParents = useMemo(
+  const topLevelPages = useMemo(
     () =>
-      ((pagesQuery.data as Page[] | undefined) ?? []).filter(
-        (p) => (p.id ?? p._id) !== pageId
+      (pagesQuery.data ?? []).filter(
+        (page) => !page.parentId && (page.id ?? page._id) !== pageId
       ),
     [pageId, pagesQuery.data]
   )
-
-  const children = useMemo(
-    () =>
-      ((pagesQuery.data as Page[] | undefined) ?? []).filter(
-        (p) => p.parentId === pageId
-      ),
-    [pageId, pagesQuery.data]
-  )
-
-  const isCreateMode = pageId === "new"
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
+
+    const payload = {
+      ...form,
+      sections: form.sections ?? [],
+      parentId: form.isHomePage ? null : form.parentId ?? null,
+    }
+
     if (isCreateMode) {
-      createMutation.mutate(form)
-    } else if (pageId) {
-      updateMutation.mutate({ id: pageId, payload: form })
+      createMutation.mutate(payload)
+      return
+    }
+
+    if (pageId) {
+      updateMutation.mutate({ id: pageId, payload })
     }
   }
 
+  const busy = createMutation.isPending || updateMutation.isPending
+  const pageStatus = form.isPublished ? "Published" : "Draft"
+
   if (pageQuery.isLoading && !isCreateMode) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center p-12">
+      <div className="flex min-h-[400px] items-center justify-center rounded-2xl border bg-card">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          {isCreateMode
-            ? "Create Page"
-            : `Edit Page: ${form.title || "Untitled"}`}
-        </CardTitle>
-        <CardDescription>
-          Manage page settings, parent page, SEO metadata, and dynamic sections
-          from one place.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          id="page-editor-form"
-          className="space-y-8"
-          onSubmit={handleSubmit}
-        >
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="page-title">Title</Label>
-              <Input
-                id="page-title"
-                value={form.title}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, title: event.target.value }))
-                }
-                placeholder="About Us"
-              />
+    <Card className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden border-none bg-card/90 shadow-xl">
+      <div className="sticky top-0 z-30 border-b bg-background/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-[var(--radius)] border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span>{isCreateMode ? "New page" : "Editing page"}</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+              <span>{pageStatus}</span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="page-slug">Slug</Label>
-              <Input
-                id="page-slug"
-                value={form.slug}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, slug: event.target.value }))
-                }
-                placeholder="about-us"
-              />
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
+                {isCreateMode ? "Create Page" : form.title || "Untitled Page"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {isCreateMode
+                  ? "Create a new page and start with sections, SEO, and hierarchy."
+                  : `Slug /${form.slug || "new"} · ${
+                      form.parentId ? "Child page" : "Top-level page"
+                    }`}
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label>Parent Page</Label>
-              <Select
-                value={form.parentId ?? "root"}
-                onValueChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    parentId: value === "root" ? null : value,
-                  }))
-                }
-                disabled={form.isHomePage}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Top-level page" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="root">Top-level page</SelectItem>
-                  {availableParents.map((p) => (
-                    <SelectItem
-                      key={p.id ?? p._id}
-                      value={(p.id ?? p._id)!}
-                    >
-                      {p.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="nav-label">Navigation Label</Label>
-              <Input
-                id="nav-label"
-                value={form.navigationLabel ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    navigationLabel: event.target.value,
-                  }))
-                }
-                placeholder="About"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sort-order">Sort Order</Label>
-              <Input
-                id="sort-order"
-                type="number"
-                value={String(form.sortOrder)}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    sortOrder: Number(event.target.value) || 0,
-                  }))
-                }
-              />
-            </div>
-          </section>
+          </div>
 
-          {children.length > 0 && (
-            <section className="space-y-4 rounded-2xl border bg-muted/5 p-6 backdrop-blur-sm">
-              <div className="flex items-center gap-2 border-b pb-3">
-                <Files className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Child Pages</h3>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {children.map((child) => (
-                  <button
-                    key={child.id ?? child._id}
-                    type="button"
-                    onClick={() => navigate(`/pages/${child.id ?? child._id}`)}
-                    className="flex items-center justify-between gap-4 rounded-xl border bg-background p-4 text-left transition-all hover:border-primary/50 hover:shadow-md"
-                  >
-                    <div>
-                      <div className="font-semibold">{child.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {child.path}
-                      </div>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="space-y-4">
-            <div className="space-y-2">
-              <MediaAssetPicker
-                label="SEO OG Image"
-                value={form.seo.ogImage ?? ""}
-                onChange={(url) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    seo: { ...prev.seo, ogImage: url },
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="meta-title">SEO Title</Label>
-              <Input
-                id="meta-title"
-                value={form.seo.metaTitle ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    seo: { ...prev.seo, metaTitle: event.target.value },
-                  }))
-                }
-                placeholder="Page meta title"
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="meta-description">SEO Description</Label>
-              <Textarea
-                id="meta-description"
-                rows={3}
-                value={form.seo.metaDescription ?? ""}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    seo: { ...prev.seo, metaDescription: event.target.value },
-                  }))
-                }
-                placeholder="Describe this page for search and social previews."
-              />
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.isHomePage}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    isHomePage: checked,
-                    parentId: checked ? null : prev.parentId,
-                  }))
-                }
-              />
-              <Label>Homepage</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.isPublished}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, isPublished: checked }))
-                }
-              />
-              <Label>Published</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.showHeader}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, showHeader: checked }))
-                }
-              />
-              <Label>Show Header</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.showFooter}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, showFooter: checked }))
-                }
-              />
-              <Label>Show Footer</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.showInHeader}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, showInHeader: checked }))
-                }
-              />
-              <Label>Show In Header Nav</Label>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4">
-              <Switch
-                checked={form.showInFooter}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, showInFooter: checked }))
-                }
-              />
-              <Label>Show In Footer Nav</Label>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <div className="flex items-center justify-between gap-4 border-b pb-2">
-              <div>
-                <h2 className="text-lg font-semibold">Sections</h2>
-                <p className="text-sm text-muted-foreground">
-                  Add content blocks and control their order for the page
-                  renderer.
-                </p>
-              </div>
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                setForm((prev) => ({
+                  ...prev,
+                  sections: [...prev.sections, createSection("richText")],
+                }))
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Section
+            </Button>
+            {!isCreateMode ? (
               <Button
                 type="button"
-                variant="outline"
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    sections: [...prev.sections, createSection("richText")],
-                  }))
-                }
+                variant="destructive"
+                onClick={() => pageId && deleteMutation.mutate(pageId)}
+                disabled={deleteMutation.isPending || busy}
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Section
+                {deleteMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Delete Page
               </Button>
-            </div>
+            ) : null}
+            <Button form="page-editor-form" type="submit" disabled={busy}>
+              {busy ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isCreateMode ? "Create Page" : "Save Page"}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <CardContent className="flex min-h-0 w-full flex-1 overflow-hidden p-0">
+        <ScrollArea className="flex min-h-0 w-full flex-1">
+          <form
+            id="page-editor-form"
+            className="min-w-0 space-y-6 p-5"
+            onSubmit={handleSubmit}
+          >
+            <FormSection
+              title="Basics"
+              description="Title, slug, and navigation settings."
+            >
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="page-title">Title</Label>
+                  <Input
+                    id="page-title"
+                    value={form.title}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, title: event.target.value }))
+                    }
+                    placeholder="About Us"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="page-slug">Slug</Label>
+                  <Input
+                    id="page-slug"
+                    value={form.slug}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, slug: event.target.value }))
+                    }
+                    placeholder="about-us"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Parent Page</Label>
+                  <Select
+                    value={form.parentId ?? "root"}
+                    onValueChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        parentId: value === "root" ? null : value,
+                      }))
+                    }
+                    disabled={form.isHomePage}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Top-level page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="root">Top-level page</SelectItem>
+                      {topLevelPages.map((page) => (
+                        <SelectItem key={page.id ?? page._id} value={(page.id ?? page._id)!}>
+                          {page.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nav-label">Navigation Label</Label>
+                  <Input
+                    id="nav-label"
+                    value={form.navigationLabel ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        navigationLabel: event.target.value,
+                      }))
+                    }
+                    placeholder="About"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sort-order">Sort Order</Label>
+                  <Input
+                    id="sort-order"
+                    type="number"
+                    value={String(form.sortOrder)}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sortOrder: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </FormSection>
 
-            <div className="space-y-4">
-              {form.sections.map((section, index) => (
-                <PageSectionEditor
-                  key={section.id}
-                  section={section}
-                  index={index}
-                  allPages={pagesQuery.data as Page[]}
-                  disableMoveUp={index === 0}
-                  disableMoveDown={index === form.sections.length - 1}
-                  onMoveUp={() =>
+            <FormSection
+              title="SEO"
+              description="Set default metadata and the social preview image."
+            >
+              <div className="space-y-4">
+                <MediaAssetPicker
+                  label="SEO OG Image"
+                  value={form.seo.ogImage ?? ""}
+                  onChange={(url) =>
                     setForm((prev) => ({
                       ...prev,
-                      sections: move(prev.sections, index, -1),
-                    }))
-                  }
-                  onMoveDown={() =>
-                    setForm((prev) => ({
-                      ...prev,
-                      sections: move(prev.sections, index, 1),
-                    }))
-                  }
-                  onRemove={() =>
-                    setForm((prev) => ({
-                      ...prev,
-                      sections: prev.sections.filter(
-                        (item) => item.id !== section.id
-                      ),
-                    }))
-                  }
-                  onChange={(nextSection) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      sections: prev.sections.map((item) =>
-                        item.id === nextSection.id ? nextSection : item
-                      ),
+                      seo: { ...prev.seo, ogImage: url },
                     }))
                   }
                 />
-              ))}
-            </div>
-          </section>
-        </form>
-      </CardContent>
-      <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/50 py-4">
-        <div>
-          {!isCreateMode && pageId ? (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => deleteMutation.mutate(pageId)}
-              disabled={deleteMutation.isPending}
+                <div className="space-y-2">
+                  <Label htmlFor="meta-title">SEO Title</Label>
+                  <Input
+                    id="meta-title"
+                    value={form.seo.metaTitle ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        seo: { ...prev.seo, metaTitle: event.target.value },
+                      }))
+                    }
+                    placeholder="Page meta title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="meta-description">SEO Description</Label>
+                  <Textarea
+                    id="meta-description"
+                    rows={3}
+                    value={form.seo.metaDescription ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        seo: { ...prev.seo, metaDescription: event.target.value },
+                      }))
+                    }
+                    placeholder="Describe this page for search and social previews."
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            <FormSection
+              title="Visibility"
+              description="Control how the page appears in the site navigation and layout."
             >
-              {deleteMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              Delete Page
-            </Button>
-          ) : null}
-        </div>
-        <Button
-          form="page-editor-form"
-          type="submit"
-          disabled={createMutation.isPending || updateMutation.isPending}
-        >
-          {createMutation.isPending || updateMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          {isCreateMode ? "Create Page" : "Save Page"}
-        </Button>
-      </CardFooter>
+              <div className="grid gap-3 md:grid-cols-3">
+                {(
+                  [
+                    {
+                      label: "Homepage",
+                      key: "isHomePage" as const,
+                    },
+                    {
+                      label: "Published",
+                      key: "isPublished" as const,
+                    },
+                    {
+                      label: "Show Header",
+                      key: "showHeader" as const,
+                    },
+                    {
+                      label: "Show Footer",
+                      key: "showFooter" as const,
+                    },
+                    {
+                      label: "Show In Header Nav",
+                      key: "showInHeader" as const,
+                    },
+                    {
+                      label: "Show In Footer Nav",
+                      key: "showInFooter" as const,
+                    },
+                  ] satisfies ReadonlyArray<{
+                    label: string
+                    key: keyof Pick<
+                      Page,
+                      | "isHomePage"
+                      | "isPublished"
+                      | "showHeader"
+                      | "showFooter"
+                      | "showInHeader"
+                      | "showInFooter"
+                    >
+                  }>
+                ).map(({ label, key }) => (
+                  <div key={key} className="flex items-center gap-3 rounded-lg border p-4">
+                    <Switch
+                      checked={Boolean(form[key])}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          [key]: checked,
+                          parentId: key === "isHomePage" && checked ? null : prev.parentId,
+                        }))
+                      }
+                    />
+                    <Label>{label}</Label>
+                  </div>
+                ))}
+              </div>
+            </FormSection>
+
+            <FormSection
+              title="Sections"
+              description="Add content blocks and control their order for the page renderer."
+            >
+              <p className="text-sm text-muted-foreground">
+                Sections are fully dynamic. Collection blocks can render child pages from a selected parent page.
+              </p>
+
+              <div className="space-y-4">
+                {form.sections.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    Start by adding a section. Rich text, collection, gallery, FAQ, and testimonial blocks are available.
+                  </div>
+                ) : null}
+
+                {form.sections.map((section, index) => (
+                  <PageSectionEditor
+                    key={section.id}
+                    section={section}
+                    index={index}
+                    allPages={pagesQuery.data ?? []}
+                    disableMoveUp={index === 0}
+                    disableMoveDown={index === form.sections.length - 1}
+                    onMoveUp={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sections: move(prev.sections, index, -1),
+                      }))
+                    }
+                    onMoveDown={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sections: move(prev.sections, index, 1),
+                      }))
+                    }
+                    onRemove={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sections: prev.sections.filter(
+                          (item) => item.id !== section.id
+                        ),
+                      }))
+                    }
+                    onChange={(nextSection) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        sections: prev.sections.map((item) =>
+                          item.id === nextSection.id ? nextSection : item
+                        ),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </FormSection>
+          </form>
+        </ScrollArea>
+      </CardContent>
     </Card>
   )
 }

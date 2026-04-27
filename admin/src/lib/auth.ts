@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "./api"
+import { useQuery } from "@tanstack/react-query"
+import { apiClient, unwrapEnvelope } from "./api"
 
 export type SessionUser = {
   id: string
@@ -14,10 +14,15 @@ export const signInEmail = async (payload: {
   rememberMe?: boolean
 }) => {
   try {
-    const res: any = await apiClient.post("/auth/login", payload)
-    return { data: { user: res.data?.user || res.data } }
-  } catch (error: any) {
-    return { error: { message: error.message || "Login failed" } }
+    const res = await apiClient.post("/auth/login", payload)
+    return { data: { user: unwrapEnvelope<{ user: SessionUser }>(res).user ?? unwrapEnvelope<SessionUser>(res) } }
+  } catch (error: unknown) {
+    return {
+      error: {
+        message:
+          error instanceof Error ? error.message : "Login failed",
+      },
+    }
   }
 }
 
@@ -27,10 +32,15 @@ export const signInAdminEmail = async (payload: {
   rememberMe?: boolean
 }) => {
   try {
-    const res: any = await apiClient.post("/auth/admin/login", payload)
-    return { data: { user: res.data?.user || res.data } }
-  } catch (error: any) {
-    return { error: { message: error.message || "Login failed" } }
+    const res = await apiClient.post("/auth/admin/login", payload)
+    return { data: { user: unwrapEnvelope<{ user: SessionUser }>(res).user ?? unwrapEnvelope<SessionUser>(res) } }
+  } catch (error: unknown) {
+    return {
+      error: {
+        message:
+          error instanceof Error ? error.message : "Login failed",
+      },
+    }
   }
 }
 
@@ -42,8 +52,17 @@ export const signOut = async () => {
   }
 }
 
-export const resetPassword = async (payload: any) => {
-  return { error: { message: "Password reset is not yet implemented in the new authenticaton flow." } };
+export const resetPassword = async (payload: {
+  newPassword: string
+  token: string
+}) => {
+  void payload
+  return {
+    error: {
+      message:
+        "Password reset is not yet implemented in the new authentication flow.",
+    },
+  }
 }
 
 export function useSession() {
@@ -51,8 +70,12 @@ export function useSession() {
     queryKey: ["session"],
     queryFn: async () => {
       try {
-        const res: any = await apiClient.get("/auth/profile")
-        return { user: res.data?.user || res.data }
+        const res = await apiClient.get("/auth/profile")
+        const payload = unwrapEnvelope<{ user: SessionUser } | SessionUser>(res)
+        return {
+          user:
+            "user" in payload ? payload.user : (payload as SessionUser),
+        }
       } catch (error) {
         return null
       }

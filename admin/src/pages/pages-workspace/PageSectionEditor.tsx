@@ -13,7 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { type Page, type PageSection, type PageSectionType } from "@/lib/api"
+import type {
+  Page,
+  PageSection,
+  PageSectionType,
+} from "@/features/content/types"
 import { sectionTypes } from "./utils"
 import { SectionItemsEditor } from "./SectionItemsEditor"
 import { EditorX } from "@/components/editor/EditorX"
@@ -48,16 +52,20 @@ export function PageSectionEditor({
   const collectionId = section.content.collectionId as string | undefined
   const selectedPageIds = (section.content.selectedPageIds as string[]) || []
 
-  // Pages that can act as "collections" (pages with children or designated parents)
   const collectionPages = useMemo(() => {
-    const parents = new Set(allPages.map(p => p.parentId).filter(Boolean))
-    return allPages.filter(p => parents.has(p.id ?? p._id))
+    const parentIds = new Set(
+      allPages.map((page) => page.parentId).filter(Boolean) as string[]
+    )
+
+    return allPages.filter((page) => {
+      const id = page.id ?? page._id
+      return Boolean(id) && !page.parentId && parentIds.has(id as string)
+    })
   }, [allPages])
 
-  // Pages available in the selected collection
   const availablePages = useMemo(() => {
     if (!collectionId) return []
-    return allPages.filter(p => p.parentId === collectionId)
+    return allPages.filter((page) => page.parentId === collectionId)
   }, [allPages, collectionId])
 
   return (
@@ -135,23 +143,32 @@ export function PageSectionEditor({
         {isCollection ? (
           <div className="space-y-4 md:col-span-2">
             <div className="space-y-2">
-              <Label>Source Collection (Parent Page)</Label>
-              <Select
-                value={collectionId || "none"}
-                onValueChange={(val) => 
-                  onChange({
-                    ...section,
-                    content: { ...section.content, collectionId: val === "none" ? undefined : val, selectedPageIds: [] }
-                  })
-                }
-              >
+            <Label>Source Collection (Parent Page)</Label>
+            <Select
+              value={collectionId || "none"}
+              onValueChange={(val) =>
+                onChange({
+                  ...section,
+                  content: {
+                    ...section.content,
+                    collectionId: val === "none" ? undefined : val,
+                    selectedPageIds: [],
+                  },
+                })
+              }
+            >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a collection..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Not selected</SelectItem>
-                  {collectionPages.map(p => (
-                    <SelectItem key={p.id ?? p._id} value={(p.id ?? p._id)!}>{p.title}</SelectItem>
+                  {collectionPages.map((page) => (
+                    <SelectItem
+                      key={page.id ?? page._id}
+                      value={(page.id ?? page._id)!}
+                    >
+                      {page.title}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -161,25 +178,28 @@ export function PageSectionEditor({
               <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
                 <Label className="mb-2 block">Select Pages to Display</Label>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {availablePages.map(page => {
+                  {availablePages.map((page) => {
                     const id = (page.id ?? page._id)!
                     const isChecked = selectedPageIds.includes(id)
                     return (
                       <div key={id} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`page-${id}`} 
+                        <Checkbox
+                          id={`page-${id}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
-                            const nextIds = checked 
+                            const nextIds = checked
                               ? [...selectedPageIds, id]
-                              : selectedPageIds.filter(pid => pid !== id)
+                              : selectedPageIds.filter((pageId) => pageId !== id)
                             onChange({
                               ...section,
-                              content: { ...section.content, selectedPageIds: nextIds }
+                              content: {
+                                ...section.content,
+                                selectedPageIds: nextIds,
+                              },
                             })
                           }}
                         />
-                        <label 
+                        <label
                           htmlFor={`page-${id}`}
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
@@ -237,7 +257,7 @@ export function PageSectionEditor({
                 />
               ) : (
                 <Textarea
-                  rows={4}
+                  rows={section.type === "split" ? 6 : 4}
                   value={section.content.body ?? ""}
                   onChange={(event) =>
                     onChange({

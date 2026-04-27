@@ -1,4 +1,8 @@
-import { type Page, type PageSection, type PageSectionType } from "@/lib/api"
+import type {
+  Page,
+  PageSection,
+  PageSectionType,
+} from "@/features/content/types"
 
 export const sectionTypes: { value: PageSectionType; label: string }[] = [
   { value: "hero", label: "Hero" },
@@ -7,6 +11,10 @@ export const sectionTypes: { value: PageSectionType; label: string }[] = [
   { value: "cta", label: "Call To Action" },
   { value: "gallery", label: "Gallery" },
   { value: "collection", label: "Collection Grid (Auto-list Children)" },
+  { value: "stats", label: "Stats" },
+  { value: "faq", label: "FAQ" },
+  { value: "testimonials", label: "Testimonials" },
+  { value: "split", label: "Split Content" },
 ]
 
 export const createSection = (type: PageSectionType = "richText"): PageSection => ({
@@ -14,6 +22,7 @@ export const createSection = (type: PageSectionType = "richText"): PageSection =
   type,
   name: "",
   content: {
+    eyebrow: "",
     heading: "",
     body: "",
     imageUrl: "",
@@ -39,7 +48,7 @@ export const emptyPage = (): Page => ({
   isHomePage: false,
   isPublished: true,
   sortOrder: 0,
-  sections: [createSection("hero")],
+  sections: [],
   seo: {
     metaTitle: "",
     metaDescription: "",

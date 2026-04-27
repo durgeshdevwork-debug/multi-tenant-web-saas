@@ -1,33 +1,19 @@
 import { useEffect, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  Globe,
-  ImagePlus,
-  Loader2,
-  Palette,
-  Save,
-  Search,
-  Share2,
-} from "lucide-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Loader2, Save } from "lucide-react"
 
 import { MediaAssetPicker } from "@/components/media-asset-picker"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  getSiteSettings,
-  updateSiteSettings,
-  type SiteSettings,
-} from "@/lib/api"
+import { FormHeader } from "@/components/forms/form-header"
+import { FormSection } from "@/components/forms/form-section"
+import { StickyActions } from "@/components/forms/sticky-actions"
+import { getSiteSettings, updateSiteSettings } from "@/features/content/services/site-settings.api"
+import type { SiteSettings } from "@/features/content/types"
+import { useQuery } from "@tanstack/react-query"
 
 const defaultSettings: SiteSettings = {
   siteName: "",
@@ -70,66 +56,82 @@ export function SiteSettingsPage() {
   const [form, setForm] = useState<SiteSettings>(defaultSettings)
 
   useEffect(() => {
-    if (settingsQuery.data) {
-      const data = settingsQuery.data as SiteSettings
-      setForm({
-        ...defaultSettings,
-        ...data,
-        logo: {
-          ...defaultSettings.logo,
-          ...data.logo,
-        },
-        business: {
-          ...defaultSettings.business,
-          ...data.business,
-        },
-        social: {
-          ...defaultSettings.social,
-          ...data.social,
-        },
-        seo: {
-          ...defaultSettings.seo,
-          ...data.seo,
-        },
-        theme: {
-          ...defaultSettings.theme,
-          ...data.theme,
-        },
-      })
-    }
+    if (!settingsQuery.data) return
+
+    const data = settingsQuery.data
+    setForm({
+      ...defaultSettings,
+      ...data,
+      logo: {
+        url: data.logo?.url ?? "",
+        alt: data.logo?.alt ?? "",
+      },
+      business: {
+        ...defaultSettings.business,
+        ...data.business,
+      },
+      social: {
+        ...defaultSettings.social,
+        ...data.social,
+      },
+      seo: {
+        ...defaultSettings.seo,
+        ...data.seo,
+      },
+      theme: {
+        ...defaultSettings.theme,
+        ...data.theme,
+      },
+    })
   }, [settingsQuery.data])
 
   const saveMutation = useMutation({
     mutationFn: updateSiteSettings,
-    onSuccess: () => {
+    onSuccess: (next) => {
+      setForm((prev) => ({
+        ...prev,
+        ...next,
+      }))
       queryClient.invalidateQueries({ queryKey: ["content", "site-settings"] })
     },
   })
 
+  const isSaving = saveMutation.isPending
+
   return (
-    <Card className="border-none bg-gradient-to-br from-card to-muted/10 shadow-xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Globe className="h-6 w-6 text-primary" /> Global Site Settings
-        </CardTitle>
-        <CardDescription>
-          Configure the website-wide identity, business details, SEO defaults,
-          and brand styling used across every page.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="flex min-h-0 flex-1 flex-col rounded-2xl border bg-card/90 shadow-xl">
+      <FormHeader
+        title="Global Site Settings"
+        description="Configure the website identity, business details, SEO defaults, and design tokens used across the site."
+      />
+      <StickyActions>
+        <Button
+          form="site-settings-form"
+          type="submit"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          Save Settings
+        </Button>
+      </StickyActions>
+
+      <ScrollArea className="h-full min-h-0">
         <form
           id="site-settings-form"
-          className="space-y-8"
+          className="space-y-6 p-5"
           onSubmit={(event) => {
             event.preventDefault()
             saveMutation.mutate(form)
           }}
         >
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b pb-2 text-lg font-semibold">
-              <ImagePlus className="h-5 w-5 text-primary" /> Branding
-            </div>
+          <FormSection
+            title="Branding"
+            description="Control the logo, favicon, and public-facing site name."
+          >
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="siteName">Site Name</Label>
@@ -162,7 +164,10 @@ export function SiteSettingsPage() {
                 onChange={(url) =>
                   setForm((prev) => ({
                     ...prev,
-                    logo: { ...(prev.logo ?? { alt: "" }), url },
+                    logo: {
+                      url,
+                      alt: prev.logo?.alt ?? "",
+                    },
                   }))
                 }
                 helperText="Use your primary brand mark for the header and footer."
@@ -193,12 +198,12 @@ export function SiteSettingsPage() {
                 helperText="Small browser icon used in tabs and bookmarks."
               />
             </div>
-          </section>
+          </FormSection>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b pb-2 text-lg font-semibold">
-              <Share2 className="h-5 w-5 text-primary" /> Business & Social
-            </div>
+          <FormSection
+            title="Business & Social"
+            description="Public contact details and social links."
+          >
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="businessEmail">Business Email</Label>
@@ -258,7 +263,7 @@ export function SiteSettingsPage() {
                       social: { ...prev.social, facebook: event.target.value },
                     }))
                   }
-                  placeholder="https://facebook.com/your-page"
+                  placeholder="https://facebook.com/acme"
                 />
               </div>
               <div className="space-y-2">
@@ -272,7 +277,7 @@ export function SiteSettingsPage() {
                       social: { ...prev.social, instagram: event.target.value },
                     }))
                   }
-                  placeholder="https://instagram.com/your-handle"
+                  placeholder="https://instagram.com/acme"
                 />
               </div>
               <div className="space-y-2">
@@ -286,11 +291,11 @@ export function SiteSettingsPage() {
                       social: { ...prev.social, linkedin: event.target.value },
                     }))
                   }
-                  placeholder="https://linkedin.com/company/your-brand"
+                  placeholder="https://linkedin.com/company/acme"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter / X</Label>
+                <Label htmlFor="twitter">Twitter</Label>
                 <Input
                   id="twitter"
                   value={form.social.twitter ?? ""}
@@ -300,16 +305,16 @@ export function SiteSettingsPage() {
                       social: { ...prev.social, twitter: event.target.value },
                     }))
                   }
-                  placeholder="https://x.com/your-handle"
+                  placeholder="https://x.com/acme"
                 />
               </div>
             </div>
-          </section>
+          </FormSection>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b pb-2 text-lg font-semibold">
-              <Search className="h-5 w-5 text-primary" /> Default SEO
-            </div>
+          <FormSection
+            title="SEO Defaults"
+            description="Set the fallback metadata used across the website."
+          >
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="defaultTitle">Default Title</Label>
@@ -325,22 +330,10 @@ export function SiteSettingsPage() {
                   placeholder="Acme Studio"
                 />
               </div>
-              <MediaAssetPicker
-                label="Open Graph Image"
-                value={form.seo.ogImage ?? ""}
-                onChange={(url) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    seo: { ...prev.seo, ogImage: url },
-                  }))
-                }
-                helperText="Used when your site is shared on social platforms."
-              />
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="defaultDescription">Default Description</Label>
-                <Textarea
+                <Input
                   id="defaultDescription"
-                  rows={4}
                   value={form.seo.defaultDescription ?? ""}
                   onChange={(event) =>
                     setForm((prev) => ({
@@ -351,16 +344,28 @@ export function SiteSettingsPage() {
                       },
                     }))
                   }
-                  placeholder="Describe the business and what visitors should expect."
+                  placeholder="A modern website for growing brands."
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <MediaAssetPicker
+                  label="OG Image"
+                  value={form.seo.ogImage ?? ""}
+                  onChange={(url) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      seo: { ...prev.seo, ogImage: url },
+                    }))
+                  }
                 />
               </div>
             </div>
-          </section>
+          </FormSection>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b pb-2 text-lg font-semibold">
-              <Palette className="h-5 w-5 text-primary" /> Theme
-            </div>
+          <FormSection
+            title="Theme Tokens"
+            description="Adjust the global visual palette from one place."
+          >
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="primaryColor">Primary Color</Label>
@@ -376,7 +381,7 @@ export function SiteSettingsPage() {
                       },
                     }))
                   }
-                  placeholder="#0f172a"
+                  placeholder="#0f766e"
                 />
               </div>
               <div className="space-y-2">
@@ -393,7 +398,7 @@ export function SiteSettingsPage() {
                       },
                     }))
                   }
-                  placeholder="#f97316"
+                  placeholder="#111827"
                 />
               </div>
               <div className="space-y-2">
@@ -410,27 +415,13 @@ export function SiteSettingsPage() {
                       },
                     }))
                   }
-                  placeholder="Georgia, serif"
+                  placeholder="Inter, sans-serif"
                 />
               </div>
             </div>
-          </section>
+          </FormSection>
         </form>
-      </CardContent>
-      <CardFooter className="flex justify-end border-t bg-muted/50 py-4">
-        <Button
-          form="site-settings-form"
-          type="submit"
-          disabled={saveMutation.isPending}
-        >
-          {saveMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          Save Site Settings
-        </Button>
-      </CardFooter>
-    </Card>
+      </ScrollArea>
+    </div>
   )
 }

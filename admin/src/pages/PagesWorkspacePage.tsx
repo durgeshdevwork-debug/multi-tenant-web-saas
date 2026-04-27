@@ -1,23 +1,18 @@
-import { useQuery } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
-import { listPages, type Page } from "@/lib/api"
-import { PageOverview } from "./pages-workspace/PageOverview"
+
+import { usePagesQuery } from "@/features/content/hooks/use-pages"
+import type { Page } from "@/features/content/types"
 import { PageEditor } from "./pages-workspace/PageEditor"
+import { PageOverview } from "./pages-workspace/PageOverview"
 
 export function PagesWorkspacePage() {
   const { pageId } = useParams()
+  const pagesQuery = usePagesQuery()
 
-  const pagesQuery = useQuery({
-    queryKey: ["content", "pages"],
-    queryFn: listPages,
-  })
-
-  const isOverview = !pageId
-
-  if (isOverview) {
-    const pages = (pagesQuery.data as Page[] | undefined) ?? []
-    return <PageOverview pages={pages} />
+  if (!pageId) {
+    return <PageOverview pages={(pagesQuery.data ?? []) as Page[]} />
   }
 
   return <PageEditor />
 }
+

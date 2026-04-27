@@ -1,7 +1,13 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus, Loader2 } from "lucide-react"
-import { createClient, getTemplates, type Template } from "@/lib/api"
+import {
+  createClient,
+  type CreateClientPayload,
+  type CreateClientResponse,
+} from "@/features/admin/services/clients.api"
+import { useAdminTemplatesQuery } from "@/features/admin/hooks/use-admin-data"
+import type { Template } from "@/features/content/types"
 import {
   Card,
   CardContent,
@@ -35,15 +41,12 @@ export function OnboardTab() {
     password: "",
   })
 
-  const templatesQuery = useQuery({
-    queryKey: ["templates"],
-    queryFn: getTemplates,
-  })
+  const templatesQuery = useAdminTemplatesQuery()
 
-  const createClientMutation = useMutation({
+  const createClientMutation = useMutation<CreateClientResponse, Error, CreateClientPayload>({
     mutationFn: createClient,
-    onSuccess: (payload: any) => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] })
+    onSuccess: (payload) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "clients"] })
       setLastApiKey(payload?.apiKey ?? null)
       setClientForm({
         clientName: "",
