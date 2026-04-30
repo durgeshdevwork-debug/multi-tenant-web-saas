@@ -1,12 +1,13 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+
 import type { PublicSection } from '../lib/publicApi';
 
-// Lazy load section components for better performance
-const HeroSection = dynamic(() => import('./sections/HeroSection'), { 
+const HeroSection = dynamic(() => import('./sections/HeroSection'), {
   loading: () => <div className="h-[400px] animate-pulse rounded-[2rem] bg-zinc-50" />
 });
+const HeroCarouselSection = dynamic(() => import('./sections/HeroCarouselSection'));
 const RichTextSection = dynamic(() => import('./sections/RichTextSection'));
 const CtaSection = dynamic(() => import('./sections/CtaSection'));
 const GallerySection = dynamic(() => import('./sections/GallerySection'), {
@@ -42,6 +43,10 @@ const CollectionGrid = dynamic(() => import('./sections/CollectionGrid'), {
     </div>
   )
 });
+const StatsSection = dynamic(() => import('./sections/StatsSection'));
+const FaqSection = dynamic(() => import('./sections/FaqSection'));
+const TestimonialsSection = dynamic(() => import('./sections/TestimonialsSection'));
+const SplitSection = dynamic(() => import('./sections/SplitSection'));
 
 export function PageRenderer({ sections }: { sections: PublicSection[] }) {
   return (
@@ -49,21 +54,36 @@ export function PageRenderer({ sections }: { sections: PublicSection[] }) {
       {sections.map((section) => {
         switch (section.type) {
           case 'hero':
+            if (section.content.carouselEnabled && (section.content.carouselItems?.length ?? 0) > 0) {
+              return <HeroCarouselSection key={section.id} section={section} />;
+            }
             return <HeroSection key={section.id} section={section} />;
-          
+
           case 'richText':
             return <RichTextSection key={section.id} section={section} />;
-          
+
           case 'cta':
             return <CtaSection key={section.id} section={section} />;
-          
+
           case 'gallery':
             return <GallerySection key={section.id} section={section} />;
+
+          case 'stats':
+            return <StatsSection key={section.id} section={section} />;
+
+          case 'faq':
+            return <FaqSection key={section.id} section={section} />;
+
+          case 'testimonials':
+            return <TestimonialsSection key={section.id} section={section} />;
+
+          case 'split':
+            return <SplitSection key={section.id} section={section} />;
 
           case 'features':
           case 'collection':
             return <CollectionGrid key={section.id} section={section} />;
-          
+
           default:
             return (
               <section key={section.id} className="rounded-2xl border border-dashed p-8 text-center text-zinc-400">

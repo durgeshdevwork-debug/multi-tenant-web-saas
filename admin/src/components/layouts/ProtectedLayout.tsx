@@ -76,6 +76,11 @@ export function ProtectedLayout({
         description:
           "Manage branding, contact details, SEO defaults, and global website configuration.",
       },
+      testimonials: {
+        title: "Testimonials",
+        description:
+          "Create testimonial collections and choose which entries appear on your pages.",
+      },
     }
 
     return (

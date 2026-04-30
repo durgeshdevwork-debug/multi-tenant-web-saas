@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { PublicSection } from '@/app/lib/publicApi';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -75,7 +76,7 @@ function LexicalToJsx({ node }: { node: LexicalNode }) {
     case 'paragraph':
       return <p className="mb-4">{children}</p>;
     case 'heading': {
-      const Tag = (node.tag || 'h3') as keyof JSX.IntrinsicElements;
+      const Tag = (node.tag || 'h3') as keyof React.JSX.IntrinsicElements;
       return <Tag className="mb-4 mt-8 font-bold italic first:mt-0">{children}</Tag>;
     }
     case 'list': {
@@ -92,11 +93,12 @@ function LexicalToJsx({ node }: { node: LexicalNode }) {
       return <hr className="my-8 border-zinc-200" />;
     case 'text':
       let text: ReactNode = node.text;
-      if (node.format & 1) text = <strong key="b">{text}</strong>; // Bold
-      if (node.format & 2) text = <em key="i">{text}</em>; // Italic
-      if (node.format & 4) text = <u key="u">{text}</u>; // Underline
-      if (node.format & 8) text = <code key="c">{text}</code>; // Code/Monospace
-      if (node.format & 16) text = <del key="s">{text}</del>; // Strikethrough
+      const format = node.format ?? 0;
+      if (format & 1) text = <strong key="b">{text}</strong>; // Bold
+      if (format & 2) text = <em key="i">{text}</em>; // Italic
+      if (format & 4) text = <u key="u">{text}</u>; // Underline
+      if (format & 8) text = <code key="c">{text}</code>; // Code/Monospace
+      if (format & 16) text = <del key="s">{text}</del>; // Strikethrough
       return text;
     case 'linebreak':
       return <br />;

@@ -355,6 +355,14 @@ function UserSidebarContent() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarNavLink
+              to="/testimonials"
+              label="Testimonials"
+              icon={<ChatsCircle />}
+              tooltip="Testimonials"
+            />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarNavLink
               to="/media"
               label="Media Library"
               icon={<Image />}

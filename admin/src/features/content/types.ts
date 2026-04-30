@@ -74,6 +74,7 @@ export type PageSectionType =
   | "split"
 
 export type PageSectionItem = {
+  id?: string
   title?: string
   description?: string
   imageUrl?: string
@@ -81,6 +82,17 @@ export type PageSectionItem = {
   url?: string
   value?: string
   icon?: string
+  question?: string
+  answer?: string
+  buttonLabel?: string
+  buttonUrl?: string
+  format?: "text" | "video" | "audio"
+  authorName?: string
+  authorRole?: string
+  company?: string
+  mediaUrl?: string
+  thumbnailUrl?: string
+  rating?: number
 }
 
 export type PageSection = {
@@ -95,8 +107,11 @@ export type PageSection = {
     buttonLabel?: string
     buttonUrl?: string
     items?: PageSectionItem[]
+    carouselEnabled?: boolean
+    carouselItems?: PageSectionItem[]
     collectionId?: string
     selectedPageIds?: string[]
+    selectedTestimonialIds?: string[]
   }
   styles?: Record<string, string>
 }
@@ -138,3 +153,27 @@ export type MediaAsset = {
   updatedAt: string
 }
 
+export type TestimonialCollection = {
+  id: string
+  label: string
+  count: number
+}
+
+export type Testimonial = {
+  _id?: string
+  id?: string
+  tenantId?: string
+  collectionId: string
+  format: "text" | "video" | "audio"
+  title?: string
+  body?: string
+  authorName: string
+  authorRole?: string
+  company?: string
+  avatarUrl?: string
+  mediaUrl?: string
+  thumbnailUrl?: string
+  rating?: number
+  isPublished: boolean
+  sortOrder: number
+}

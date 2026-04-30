@@ -21,6 +21,7 @@ export const createSection = (type: PageSectionType = "richText"): PageSection =
   id: `section-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   type,
   name: "",
+  // Use type-specific defaults so the editor opens with useful starter fields.
   content: {
     eyebrow: "",
     heading: "",
@@ -31,7 +32,18 @@ export const createSection = (type: PageSectionType = "richText"): PageSection =
     items:
       type === "features" || type === "gallery"
         ? [{ title: "", description: "", imageUrl: "" }]
-        : [],
+        : type === "stats"
+          ? [{ title: "", value: "", description: "" }]
+          : type === "faq"
+            ? [{ question: "", answer: "", imageUrl: "" }]
+            : [],
+    carouselEnabled: type === "hero" ? false : undefined,
+    carouselItems:
+      type === "hero"
+        ? [{ title: "", description: "", imageUrl: "", buttonLabel: "", buttonUrl: "" }]
+        : undefined,
+    collectionId: type === "testimonials" ? "" : undefined,
+    selectedTestimonialIds: type === "testimonials" ? [] : undefined,
   },
   styles: {},
 })

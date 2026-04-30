@@ -18,16 +18,29 @@ const fetchJson = async <T>(path: string): Promise<T | null> => {
 };
 
 export type PublicSectionItem = {
+  id?: string;
   title?: string;
   description?: string;
   imageUrl?: string;
   label?: string;
   url?: string;
+  value?: string;
+  question?: string;
+  answer?: string;
+  buttonLabel?: string;
+  buttonUrl?: string;
+  format?: 'text' | 'video' | 'audio';
+  authorName?: string;
+  authorRole?: string;
+  company?: string;
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  rating?: number;
 };
 
 export type PublicSection = {
   id: string;
-  type: 'hero' | 'richText' | 'features' | 'cta' | 'gallery' | 'collection';
+  type: 'hero' | 'richText' | 'features' | 'cta' | 'gallery' | 'collection' | 'stats' | 'faq' | 'testimonials' | 'split';
   name?: string;
   content: {
     eyebrow?: string;
@@ -37,6 +50,11 @@ export type PublicSection = {
     buttonLabel?: string;
     buttonUrl?: string;
     items?: PublicSectionItem[];
+    carouselEnabled?: boolean;
+    carouselItems?: PublicSectionItem[];
+    collectionId?: string;
+    selectedPageIds?: string[];
+    selectedTestimonialIds?: string[];
   };
   selectedPages?: PublicPage[];
 };

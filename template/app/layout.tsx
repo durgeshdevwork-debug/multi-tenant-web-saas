@@ -1,21 +1,10 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 
 import './globals.css';
 
 import SiteFooter from './components/layout/SiteFooter';
 import SiteHeader from './components/layout/SiteHeader';
 import { publicApi, publicApiConfig } from './lib/publicApi';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: 'Dynamic CMS Website',
@@ -38,7 +27,7 @@ export default async function RootLayout({
   ].filter((item): item is { label: string; href: string } => Boolean(item.href));
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body
         className="min-h-full flex flex-col bg-background text-foreground"
         style={{

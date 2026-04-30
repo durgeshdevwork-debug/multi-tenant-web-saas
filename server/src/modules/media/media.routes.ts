@@ -9,8 +9,13 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024
   },
   fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      cb(new Error('Only image uploads are allowed'));
+    const isAllowed =
+      file.mimetype.startsWith('image/') ||
+      file.mimetype.startsWith('video/') ||
+      file.mimetype.startsWith('audio/');
+
+    if (!isAllowed) {
+      cb(new Error('Only image, video, or audio uploads are allowed'));
       return;
     }
     cb(null, true);
@@ -24,4 +29,3 @@ mediaRouter.use(requireTenantUser);
 mediaRouter.get('/', mediaController.listMedia);
 mediaRouter.post('/', upload.single('file'), mediaController.uploadMedia);
 mediaRouter.delete('/:id', mediaController.deleteMedia);
-

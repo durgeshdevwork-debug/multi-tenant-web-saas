@@ -6,6 +6,7 @@ import { MediaLibraryPage } from "./pages/MediaLibraryPage"
 import { ResetPasswordPage } from "./pages/ResetPasswordPage"
 import { SiteSettingsPage } from "./pages/SiteSettingsPage"
 import { PagesWorkspacePage } from "./pages/PagesWorkspacePage"
+import { TestimonialsPage } from "./pages/TestimonialsPage"
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: "site-settings",
         element: <SiteSettingsPage />,
+      },
+      {
+        path: "testimonials",
+        element: <TestimonialsPage />,
       },
     ],
   },

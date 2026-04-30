@@ -1,10 +1,12 @@
 import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
+
 import { MediaAssetPicker } from "@/components/media-asset-picker"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -12,12 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import type {
-  Page,
-  PageSection,
-  PageSectionType,
-} from "@/features/content/types"
+import type { Page, PageSection, PageSectionType } from "@/features/content/types"
+import {
+  listTestimonialCollections,
+  listTestimonials,
+} from "@/features/content/services/testimonials.api"
 import { sectionTypes } from "./utils"
 import { SectionItemsEditor } from "./SectionItemsEditor"
 import { EditorX } from "@/components/editor/EditorX"
@@ -43,14 +46,21 @@ export function PageSectionEditor({
   disableMoveUp: boolean
   disableMoveDown: boolean
 }) {
-  const supportsItems =
-    section.type === "features" || section.type === "gallery"
-  const supportsImage = section.type === "hero" || section.type === "gallery"
-  const supportsButton = section.type === "hero" || section.type === "cta"
+  const heroCarouselEnabled = section.type === "hero" && Boolean(section.content.carouselEnabled)
+  const supportsImage =
+    ["gallery", "split"].includes(section.type) ||
+    (section.type === "hero" && !heroCarouselEnabled)
+  const supportsButton =
+    ["cta", "split"].includes(section.type) ||
+    (section.type === "hero" && !heroCarouselEnabled)
   const isCollection = section.type === "collection"
+  const isTestimonials = section.type === "testimonials"
+  const hasRichBody = section.type === "richText"
 
   const collectionId = section.content.collectionId as string | undefined
   const selectedPageIds = (section.content.selectedPageIds as string[]) || []
+  const selectedTestimonialIds =
+    (section.content.selectedTestimonialIds as string[]) || []
 
   const collectionPages = useMemo(() => {
     const parentIds = new Set(
@@ -68,13 +78,31 @@ export function PageSectionEditor({
     return allPages.filter((page) => page.parentId === collectionId)
   }, [allPages, collectionId])
 
+  const testimonialCollectionsQuery = useQuery({
+    queryKey: ["content", "testimonials", "collections"],
+    queryFn: listTestimonialCollections,
+    enabled: isTestimonials,
+  })
+
+  const testimonialItemsQuery = useQuery({
+    queryKey: ["content", "testimonials", collectionId],
+    queryFn: () => listTestimonials(collectionId),
+    enabled: isTestimonials && Boolean(collectionId),
+  })
+
+  const testimonialItems = testimonialItemsQuery.data ?? []
+
   return (
     <div className="rounded-2xl border bg-background p-5 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-semibold">Section {index + 1}</h3>
           <p className="text-sm text-muted-foreground">
-            {isCollection ? "Pick a parent page and select which child pages to display." : "Choose the block type and edit its content fields."}
+            {isCollection
+              ? "Pick a parent page and select which child pages to display."
+              : isTestimonials
+                ? "Choose a testimonial collection and pick which entries should appear."
+                : "Choose the block type and edit its content fields."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -143,20 +171,20 @@ export function PageSectionEditor({
         {isCollection ? (
           <div className="space-y-4 md:col-span-2">
             <div className="space-y-2">
-            <Label>Source Collection (Parent Page)</Label>
-            <Select
-              value={collectionId || "none"}
-              onValueChange={(val) =>
-                onChange({
-                  ...section,
-                  content: {
-                    ...section.content,
-                    collectionId: val === "none" ? undefined : val,
-                    selectedPageIds: [],
-                  },
-                })
-              }
-            >
+              <Label>Source Collection (Parent Page)</Label>
+              <Select
+                value={collectionId || "none"}
+                onValueChange={(val) =>
+                  onChange({
+                    ...section,
+                    content: {
+                      ...section.content,
+                      collectionId: val === "none" ? undefined : val,
+                      selectedPageIds: [],
+                    },
+                  })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a collection..." />
                 </SelectTrigger>
@@ -209,7 +237,9 @@ export function PageSectionEditor({
                     )
                   })}
                   {availablePages.length === 0 && (
-                    <p className="col-span-full text-sm text-muted-foreground italic">No child pages found for this collection.</p>
+                    <p className="col-span-full text-sm italic text-muted-foreground">
+                      No child pages found for this collection.
+                    </p>
                   )}
                 </div>
               </div>
@@ -243,9 +273,45 @@ export function PageSectionEditor({
                 placeholder="Section heading"
               />
             </div>
+
+            {section.type === "hero" ? (
+              <div className="flex items-center justify-between rounded-xl border bg-muted/20 px-4 py-3 md:col-span-2">
+                <div>
+                  <div className="font-medium">Enable carousel</div>
+                  <p className="text-sm text-muted-foreground">
+                    Turn this hero into a multi-slide carousel.
+                  </p>
+                </div>
+                <Switch
+                  checked={Boolean(section.content.carouselEnabled)}
+                  onCheckedChange={(checked) =>
+                    onChange({
+                      ...section,
+                      content: {
+                        ...section.content,
+                        carouselEnabled: checked,
+                        carouselItems:
+                          checked && !section.content.carouselItems?.length
+                            ? [
+                                {
+                                  title: "",
+                                  description: "",
+                                  imageUrl: "",
+                                  buttonLabel: "",
+                                  buttonUrl: "",
+                                },
+                              ]
+                            : section.content.carouselItems,
+                      },
+                    })
+                  }
+                />
+              </div>
+            ) : null}
+
             <div className="space-y-2 md:col-span-2">
-              <Label>Body</Label>
-              {section.type === "richText" ? (
+              <Label>{hasRichBody ? "Body" : "Body / Description"}</Label>
+              {hasRichBody ? (
                 <EditorX
                   value={section.content.body ?? ""}
                   onChange={(val) =>
@@ -269,6 +335,7 @@ export function PageSectionEditor({
                 />
               )}
             </div>
+
             {supportsImage ? (
               <div className="space-y-2 md:col-span-2">
                 <MediaAssetPicker
@@ -283,6 +350,7 @@ export function PageSectionEditor({
                 />
               </div>
             ) : null}
+
             {supportsButton ? (
               <>
                 <div className="space-y-2">
@@ -319,16 +387,111 @@ export function PageSectionEditor({
                 </div>
               </>
             ) : null}
+
+            {isTestimonials ? (
+              <div className="space-y-4 md:col-span-2">
+                <div className="space-y-2">
+                  <Label>Testimonial Collection</Label>
+                  <Select
+                    value={collectionId || "none"}
+                    onValueChange={(value) =>
+                      onChange({
+                        ...section,
+                        content: {
+                          ...section.content,
+                          collectionId: value === "none" ? undefined : value,
+                          selectedTestimonialIds: [],
+                        },
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a testimonial collection" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not selected</SelectItem>
+                      {(testimonialCollectionsQuery.data ?? []).map((collection) => (
+                        <SelectItem key={collection.id} value={collection.id}>
+                          {collection.label} ({collection.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {collectionId ? (
+                  <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+                    <Label className="mb-2 block">Select Testimonials to Display</Label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {testimonialItems.map((testimonial) => {
+                        const id = testimonial.id ?? testimonial._id!
+                        const isChecked = selectedTestimonialIds.includes(id)
+
+                        return (
+                          <div key={id} className="rounded-lg border bg-background p-3">
+                            <div className="flex items-start gap-3">
+                              <Checkbox
+                                id={`testimonial-${id}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  const nextIds = checked
+                                    ? [...selectedTestimonialIds, id]
+                                    : selectedTestimonialIds.filter((itemId) => itemId !== id)
+                                  onChange({
+                                    ...section,
+                                    content: {
+                                      ...section.content,
+                                      selectedTestimonialIds: nextIds,
+                                    },
+                                  })
+                                }}
+                              />
+                              <label
+                                htmlFor={`testimonial-${id}`}
+                                className="block flex-1 cursor-pointer text-sm"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">
+                                    {testimonial.authorName}
+                                  </span>
+                                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                    {testimonial.format}
+                                  </span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  {testimonial.title || testimonial.company || "Untitled testimonial"}
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {testimonialItems.length === 0 && (
+                        <p className="col-span-full text-sm italic text-muted-foreground">
+                          No testimonials found in this collection yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                    Select a testimonial collection to load available items.
+                  </p>
+                )}
+              </div>
+            ) : null}
+
+            {heroCarouselEnabled || section.type === "features" || section.type === "gallery" || section.type === "stats" || section.type === "faq" ? (
+              <div className="md:col-span-2">
+                <Label className="mb-2 block">
+                  {section.type === "hero" ? "Carousel Slides" : "Section Items"}
+                </Label>
+                <SectionItemsEditor section={section} onChange={onChange} />
+              </div>
+            ) : null}
           </>
         )}
       </div>
-
-      {supportsItems ? (
-        <div className="mt-4">
-          <Label className="mb-2 block">Section Items</Label>
-          <SectionItemsEditor section={section} onChange={onChange} />
-        </div>
-      ) : null}
     </div>
   )
 }

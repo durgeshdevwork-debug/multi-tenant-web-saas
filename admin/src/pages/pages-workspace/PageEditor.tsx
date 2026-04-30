@@ -399,7 +399,7 @@ export function PageEditor() {
               <div className="space-y-4">
                 {form.sections.length === 0 ? (
                   <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                    Start by adding a section. Rich text, collection, gallery, FAQ, and testimonial blocks are available.
+                    Start by adding a section. Hero, stats, FAQ, testimonials, collection, gallery, and split blocks are available.
                   </div>
                 ) : null}
 

@@ -1,5 +1,6 @@
 import { Page } from './models/Page';
 import { SiteSettings } from './models/SiteSettings';
+import { TestimonialService } from '../testimonials/testimonials.service';
 
 type PageInput = Record<string, any> & {
   title: string;
@@ -174,6 +175,7 @@ export class ContentService {
 
   static async getPublishedPageByPath(tenantId: string, path: string) {
     const pages = await Page.find({ tenantId, isPublished: true }).lean();
+    const testimonials = await TestimonialService.listPublishedTestimonials(tenantId);
     const enriched = enrichPages(pages);
     const normalizedPath = path === '/' ? '/' : `/${path.replace(/^\/+|\/+$/g, '')}`;
     const page = enriched.find((item) => item.path === normalizedPath);
@@ -189,6 +191,13 @@ export class ContentService {
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     // Populate selected pages in sections
+    const testimonialItemsByCollection = testimonials.reduce((acc: Map<string, any[]>, testimonial: any) => {
+      const bucket = acc.get(testimonial.collectionId) ?? [];
+      bucket.push(testimonial);
+      acc.set(testimonial.collectionId, bucket);
+      return acc;
+    }, new Map<string, any[]>());
+
     const processedSections = page.sections.map((section: any) => {
       const content = section.content || {};
       
@@ -207,7 +216,11 @@ export class ContentService {
 
         const dynamicItems = sourcePages.map((p: any) => ({
           title: p.title,
-          description: p.seo?.metaDescription || (typeof p.sections?.find((s: any) => s.content?.body)?.content?.body === 'string' ? p.sections.find((s: any) => s.content?.body).content.body.substring(0, 160) + '...' : 'Click to learn more.'),
+          description:
+            p.seo?.metaDescription ||
+            (typeof p.sections?.find((s: any) => s.content?.body)?.content?.body === 'string'
+              ? `${p.sections.find((s: any) => s.content?.body).content.body.slice(0, 160).trim()}...`
+              : 'Click to learn more.'),
           imageUrl: p.seo?.ogImage || '',
           url: p.path
         }));
@@ -217,6 +230,39 @@ export class ContentService {
           content: { 
             ...content, 
             items: dynamicItems
+          } 
+        };
+      }
+
+      if (section.type === 'testimonials') {
+        const collectionId = content.collectionId || '';
+        const selectedTestimonialIds = content.selectedTestimonialIds || [];
+        const sourceTestimonials = collectionId
+          ? (testimonialItemsByCollection.get(collectionId) || [])
+          : testimonials;
+
+        const selectedSet = new Set(selectedTestimonialIds.map(String));
+        const testimonialSource = selectedTestimonialIds.length
+          ? sourceTestimonials.filter((item: any) => selectedSet.has(String(item.id)))
+          : sourceTestimonials;
+
+        return {
+          ...section,
+          content: {
+            ...content,
+            items: testimonialSource.map((testimonial: any) => ({
+              id: testimonial.id,
+              title: testimonial.title,
+              description: testimonial.body,
+              imageUrl: testimonial.avatarUrl || testimonial.thumbnailUrl || '',
+              format: testimonial.format,
+              authorName: testimonial.authorName,
+              authorRole: testimonial.authorRole,
+              company: testimonial.company,
+              mediaUrl: testimonial.mediaUrl,
+              thumbnailUrl: testimonial.thumbnailUrl,
+              rating: testimonial.rating
+            }))
           }
         };
       }

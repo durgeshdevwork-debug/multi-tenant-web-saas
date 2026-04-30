@@ -2,12 +2,14 @@ import { Router } from 'express';
 import { requireTenantUser } from '../../shared/middlewares/roleMiddleware';
 import * as contentController from './content.controller';
 import { mediaRouter } from '@modules/media/media.routes';
+import { testimonialsRouter } from '@modules/testimonials/testimonials.routes';
 
 export const contentRouter = Router();
 
 contentRouter.use(requireTenantUser);
 
 contentRouter.use('/media', mediaRouter);
+contentRouter.use('/testimonials', testimonialsRouter);
 
 contentRouter.get('/site-settings', contentController.getSiteSettings);
 contentRouter.put('/site-settings', contentController.updateSiteSettings);
